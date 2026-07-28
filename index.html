@@ -163,9 +163,9 @@
     this._refs = {};
   }
 
-  Quiz.prototype.ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 25, 22, 23, 24, 26];
+  Quiz.prototype.ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 16, 18, 19, 20, 21, 25, 23, 24, 26];
   Quiz.prototype.LAST = 26;
-  Quiz.prototype.AUTO = new Set([1, 6, 16, 23, 24, 25]);
+  Quiz.prototype.AUTO = new Set([1, 6, 16, 23, 24]);
   Quiz.prototype.EVENT_NAMES = { 6: "loader_personalizing_plan", 13: "personal_style", 14: "hero_ats_sales", 16: "hero_job_match_matching", 24: "score_potential", 25: "feel_the_difference", 26: "recommended_cv" };
 
   Quiz.prototype.QUESTIONS = {
@@ -194,12 +194,12 @@
       opts: [{ l: "Balanced", desc: "Universal and safe" }, { l: "Modern", desc: "Clean and minimal" }, { l: "Creative", desc: "Bold and expressive" }, { l: "Classic", desc: "Timeless and professional" }, { l: "Technical", desc: "Structured and precise" }] },
     15: { key: "work_preference", title: "What kind of role are you looking for?", subtitle: null, back: true,
       opts: [{ e: "🏡", l: "Remote" }, { e: "🔀", l: "Hybrid" }, { e: "🏢", l: "On-site" }, { e: "🌍", l: "I'm open to any" }] },
+    17: { key: "salary_range", title: "What is your expected salary range for your next position?", subtitle: null, back: true,
+      opts: [{ l: "Under $50,000" }, { l: "$50,000 – $75,000" }, { l: "$75,000 – $105,000" }, { l: "$105,000 – $145,000" }, { l: "$145,000 – $195,000" }, { l: "$195,000 – $280,000" }, { l: "Above $280,000+" }] },
     18: { key: "linkedin_status", title: "How's your LinkedIn profile today?", subtitle: null, back: true,
       opts: [{ e: "✨", l: "Optimized and updated" }, { e: "💤", l: "It exists but I don't touch it much" }, { e: "🤷", l: "I've never really worked on it" }, { e: "🚫", l: "I don't have one" }] },
     20: { key: "interview_feeling", title: "When you think about your next interview, what do you feel?", subtitle: null, back: true,
-      opts: [{ e: "💪", l: "Confident — I've got this", bold: "Confident" }, { e: "😅", l: "A little nervous" }, { e: "😰", l: "Anxious — I dread them", bold: "Anxious" }, { e: "🕰️", l: "I haven't had one in a while" }] },
-    22: { key: "main_motivation", title: "Finally, what's driving your search right now?", subtitle: null, back: true,
-      opts: [{ e: "💰", l: "A better salary" }, { e: "🏡", l: "Remote flexibility" }, { e: "📈", l: "Career growth or promotion" }, { e: "🔀", l: "A career change" }, { e: "✨", l: "Something more meaningful" }] }
+      opts: [{ e: "💪", l: "Confident — I've got this", bold: "Confident" }, { e: "😅", l: "A little nervous" }, { e: "😰", l: "Anxious — I dread them", bold: "Anxious" }, { e: "🕰️", l: "I haven't had one in a while" }] }
   };
 
   Quiz.prototype.ROLE_CHIPS = {
@@ -247,7 +247,6 @@
     if (n === 11) this.runNoticed();
     if (n === 23) this.runBuilding();
     if (n === 24) { this.runScore(); var self24 = this; this._timers.push(setTimeout(function () { self24.advanceFrom(24); }, 2600)); }
-    if (n === 25) { var self25 = this; this._timers.push(setTimeout(function () { self25.advanceFrom(25); }, 3000)); }
   };
 
   Quiz.prototype.go = function (n) { this._history.push(this.state.screen); this.enter(n); };
@@ -821,12 +820,13 @@
       ]);
     };
     return this.wrap([this.topBar(true), this.progress(25),
-      h("div", { onClick: function () { self.advanceFrom(25); }, style: { flex: 1, overflowY: "auto", padding: "26px 24px 26px", cursor: "pointer" } }, [
-        this.eyebrow("Why ResumeCoach"),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "26px 24px 8px" } }, [
+        this.eyebrowBlue("WHY RESUMECOACH"),
         h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Feel the difference."),
         h("p", { style: { margin: "10px 0 26px", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, "How things shift once you have us on your side."),
         h("div", { style: { display: "flex", gap: "18px", alignItems: "flex-start" } }, [col("Before", left, false), col("With ResumeCoach", right, true)])
-      ])]);
+      ]),
+      this.cta("Continue", function () { self.advanceFrom(25); })]);
   };
 
   Quiz.prototype.buildBuildingLoader = function () {
