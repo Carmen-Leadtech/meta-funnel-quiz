@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--
+  ============================================================================
+  PRODUCTION BUILD — Meta Funnel Quiz (27→26 screen flow, S01–S26)
+  ============================================================================
+  This file is self-contained: vanilla HTML/CSS/JS, no React, no external
+  framework, no mobile-device frame, no design-review stepper. Full width /
+  full height on mobile, ready to drop behind any URL once the 3 TODOs below
+  are resolved (task 2 — see QUIZ_FUNNEL_SPEC.md in the project folder):
+
+  TODO #1 — Environment-dependent GTM <noscript> fallback.
+    Confirm this page targets MASTER or STAGE. If MASTER, add immediately
+    after the opening <body> tag (see the commented block right below it):
+      <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5XDR337" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    If STAGE, leave it out entirely (stage has no GTM container).
+
+  TODO #2 — Bump the init.js cache-busting timestamp.
+    The tag below already follows the spec (root-relative, first tag in
+    <head>, no async/defer). Its `?v=` value is a placeholder — set it to
+    the actual yyyyMMddHHmmss at the moment this file is next edited/deployed.
+
+  TODO #3 — Real destination URL for the CTA.
+    Search for FINAL_CTA_HREF near the top of the <script> below and replace
+    the placeholder with the real signup/registration URL (the one that
+    leads into the paywall). Also sanity-check FINAL_CTA_NAME, the
+    `cta_name` slug Amplitude will record.
+
+  Everything else (tracking guard, click_cta wiring, no page-level nav
+  listener on the CTA, custom event naming) is already applied per the spec.
+-->
+<script src="/qz/common/init.js?v=20260727000000"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ResumeCoach — Your journey to a better CV and a better job</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #FFFFFF; overflow: hidden; }
+  body { font-family: Roboto, sans-serif; }
+  a { color: #006DCC; text-decoration: none; }
+  #rc-quiz-root { position: relative; width: 100%; height: 100vh; height: 100dvh; background: #FFFFFF; overflow: hidden; }
+  @keyframes rc-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes rc-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.45); opacity: 0.5; } }
+  @keyframes rc-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .rc-btn:active:not(.rc-btn--grad) { background: #00417A; }
+  .rc-btn--grad:active { filter: brightness(0.92); }
+  .rc-cta:active:not(.rc-cta--grad) { background: #00417A; }
+  .rc-cta--grad:active { filter: brightness(0.92); }
+</style>
+</head>
+<body>
+<!-- TODO #1 (master only) — uncomment once environment is confirmed:
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5XDR337" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+-->
+<div id="rc-quiz-root"></div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // Pending values (task 2) — search for these two names when the real
+  // destination is known.
+  // ---------------------------------------------------------------------
+  var FINAL_CTA_HREF = "#pending-registration-url"; // TODO #3: replace with the real signup URL
+  var FINAL_CTA_NAME = "build_cv_now"; // cta_name slug recorded by Amplitude
+
+  // ---------------------------------------------------------------------
+  // Amplitude readiness guard (QUIZ_FUNNEL_SPEC.md §3 / §"async init behavior")
+  // ---------------------------------------------------------------------
+  function whenAmplitudeReady(cb) {
+    if (window.amplitude) return cb();
+    var t = setInterval(function () {
+      if (window.amplitude) { clearInterval(t); cb(); }
+    }, 100);
+  }
+
+  // ---------------------------------------------------------------------
+  // Referenced image assets (relative to this file — ./assets/*)
+  // ---------------------------------------------------------------------
+  var RESOURCES = {
+    resumecoachLogo: "assets/resumecoach-logo.svg",
+    nyt: "assets/nyt.webp",
+    brandAccenture: "assets/brand-accenture.webp",
+    brandAmazon: "assets/brand-amazon.webp",
+    brandTesla: "assets/brand-tesla.webp",
+    brandDhl: "assets/brand-dhl.webp",
+    brandGoogle: "assets/brand-google.webp",
+    brandUber: "assets/brand-uber.webp",
+    brandVisa: "assets/brand-visa.webp",
+    peopleHired: "assets/people-hired.webp",
+    atsPassedV2: "assets/ats-passed-v2.webp",
+    jobMatchCardsV2: "assets/job-match-cards-v2.webp",
+    linkedinBeforeAfterV2: "assets/linkedin-before-after-v2.webp",
+    cvAmsterdam: "assets/cv-amsterdam.webp",
+    cvVienna: "assets/cv-vienna.webp",
+    cvFlorence: "assets/cv-florence.webp",
+    cvMunich: "assets/cv-munich.webp",
+    cvStockholm: "assets/cv-stockholm.webp",
+    iconAts: "assets/icon-ats.webp",
+    iconCoverletter: "assets/icon-coverletter.webp",
+    iconLinkedin: "assets/icon-linkedin.webp",
+    iconInterview: "assets/icon-interview.webp",
+    iconJobmatch: "assets/icon-jobmatch.webp",
+    people: "assets/people.webp"
+  };
+
+  // ---------------------------------------------------------------------
+  // Minimal real-DOM element factory (drop-in for the old React.createElement
+  // call sites — this app never needs virtual-dom diffing since each screen
+  // is fully rebuilt on transition, so a real-node factory is a safe swap).
+  // ---------------------------------------------------------------------
+  function h(tag, props, children) {
+    var el = document.createElement(tag);
+    props = props || {};
+    for (var key in props) {
+      var val = props[key];
+      if (val == null || key === "key") continue;
+      if (key === "style") { Object.assign(el.style, val); }
+      else if (key === "className") { el.className = val; }
+      else if (key === "dangerouslySetInnerHTML") { el.innerHTML = val.__html; }
+      else if (key === "onClick") { el.addEventListener("click", val); }
+      else if (key === "style-active") { /* handled via CSS :active classes */ }
+      else if (key === "role" || key.indexOf("-") >= 0) { el.setAttribute(key, val); }
+      else { el[key] = val; }
+    }
+    appendChildren(el, children);
+    return el;
+  }
+  function appendChildren(el, children) {
+    if (children == null || children === false) return;
+    if (Array.isArray(children)) { for (var i = 0; i < children.length; i++) appendChildren(el, children[i]); return; }
+    if (children instanceof Node) { el.appendChild(children); return; }
+    el.appendChild(document.createTextNode(String(children)));
+  }
+
+  // ---------------------------------------------------------------------
+  // Quiz component
+  // ---------------------------------------------------------------------
+  function Quiz(root) {
+    this.root = root;
+    this.state = { screen: 1, answers: {} };
+    this._timers = [];
+    this._history = [];
+    this._refs = {};
+  }
+
+  Quiz.prototype.ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 25, 22, 23, 24, 26];
+  Quiz.prototype.LAST = 26;
+  Quiz.prototype.AUTO = new Set([1, 6, 16, 23, 24, 25]);
+  Quiz.prototype.EVENT_NAMES = { 6: "loader_personalizing_plan", 13: "personal_style", 14: "hero_ats_sales", 16: "hero_job_match_matching", 24: "score_potential", 25: "feel_the_difference", 26: "recommended_cv" };
+
+  Quiz.prototype.QUESTIONS = {
+    2: { key: "professional_status", title: "What's your current professional status?", subtitle: "This helps us tailor the CV format to your situation.", back: false,
+      opts: [{ e: "🎓", l: "Student" }, { e: "💼", l: "Professional, job-seeking" }, { e: "🏗️", l: "Freelancer / self-employed" }, { e: "👔", l: "Former employee, changing careers" }] },
+    3: { key: "sector", title: "Which sector do you work in — or want to?", subtitle: null, back: true,
+      opts: [{ e: "🛍️", l: "Retail, Hospitality & Tourism" }, { e: "🩺", l: "Healthcare & Medical" }, { e: "🚚", l: "Manufacturing, Logistics & Transport" }, { e: "🗂️", l: "Office, Admin & Customer Support" }, { e: "🏗️", l: "Construction & Trades" }, { e: "💻", l: "Tech, Marketing & Media" }, { e: "✨", l: "Other" }] },
+    4: { key: "experience_level", title: "How much experience do you have?", subtitle: "This decides how we structure your CV.", back: true,
+      opts: [{ e: "🌱", l: "No experience yet" }, { e: "📚", l: "Internships or temporary jobs" }, { e: "🛠️", l: "Solid work experience (3–7 years)" }, { e: "👑", l: "Senior or leadership (8+ years)" }] },
+    8: { key: "main_goal", title: "What's your main goal?", subtitle: null, back: true,
+      opts: [{ e: "💰", l: "Get a better-paying role" }, { e: "📞", l: "Land more interviews" }, { e: "🔀", l: "Change careers" }, { e: "🌱", l: "Land my first professional job" }, { e: "✨", l: "Build a stronger personal brand" }] },
+    9: { key: "help_needed", title: "What do you want help with most?", subtitle: "Select all that apply.", back: true, multi: true,
+      opts: [{ l: "Writing a strong CV for my role" }, { l: "Passing ATS filters" }, { l: "Tailoring my CV to specific jobs" }, { l: "Preparing for interviews" }, { l: "Improving my LinkedIn presence" }, { l: "Look for jobs that match my profile" }, { l: "All of the above", all: true }] },
+    10: { key: "biggest_frustration", title: "What frustrates you most right now?", subtitle: "Select all that apply.", back: true, multi: true,
+      opts: [
+        { e: "😣", l: "Being rejected because my CV isn't strong enough", bold: "Being rejected" },
+        { e: "😰", l: "Feeling unprepared for interviews", bold: "Feeling unprepared" },
+        { e: "😔", l: "Feeling less competitive than other candidates", bold: "Feeling less competitive" },
+        { e: "😶", l: "Being invisible on LinkedIn to recruiters", bold: "Being invisible" },
+        { e: "😞", l: "Never hearing back after applying", bold: "Never hearing back" },
+        { l: "All of the above", all: true }
+      ] },
+    12: { key: "cv_status", title: "What does your CV look like today?", subtitle: null, back: true,
+      opts: [{ e: "🆕", l: "I don't have one" }, { e: "🗓️", l: "It's outdated" }, { e: "📄", l: "It's decent, but it's not getting results" }, { e: "🎨", l: "I redesigned it recently, not sure if it works" }] },
+    13: { key: "personal_style", title: "What's your personal style?", subtitle: "We'll match your CV design to your vibe.", back: true,
+      opts: [{ l: "Balanced", desc: "Universal and safe" }, { l: "Modern", desc: "Clean and minimal" }, { l: "Creative", desc: "Bold and expressive" }, { l: "Classic", desc: "Timeless and professional" }, { l: "Technical", desc: "Structured and precise" }] },
+    15: { key: "work_preference", title: "What kind of role are you looking for?", subtitle: null, back: true,
+      opts: [{ e: "🏡", l: "Remote" }, { e: "🔀", l: "Hybrid" }, { e: "🏢", l: "On-site" }, { e: "🌍", l: "I'm open to any" }] },
+    18: { key: "linkedin_status", title: "How's your LinkedIn profile today?", subtitle: null, back: true,
+      opts: [{ e: "✨", l: "Optimized and updated" }, { e: "💤", l: "It exists but I don't touch it much" }, { e: "🤷", l: "I've never really worked on it" }, { e: "🚫", l: "I don't have one" }] },
+    20: { key: "interview_feeling", title: "When you think about your next interview, what do you feel?", subtitle: null, back: true,
+      opts: [{ e: "💪", l: "Confident — I've got this", bold: "Confident" }, { e: "😅", l: "A little nervous" }, { e: "😰", l: "Anxious — I dread them", bold: "Anxious" }, { e: "🕰️", l: "I haven't had one in a while" }] },
+    22: { key: "main_motivation", title: "Finally, what's driving your search right now?", subtitle: null, back: true,
+      opts: [{ e: "💰", l: "A better salary" }, { e: "🏡", l: "Remote flexibility" }, { e: "📈", l: "Career growth or promotion" }, { e: "🔀", l: "A career change" }, { e: "✨", l: "Something more meaningful" }] }
+  };
+
+  Quiz.prototype.ROLE_CHIPS = {
+    "Retail, Hospitality & Tourism": ["Sales Associate", "Cashier", "Server / Bartender", "Cook / Line Cook", "Store Manager", "Guest Services / Hotel Staff", "Housekeeper", "Other"],
+    "Healthcare & Medical": ["Nursing Assistant / CNA", "Registered Nurse", "Medical Assistant", "Home Health Aide", "Caregiver", "Pharmacy Technician", "Healthcare Admin", "Other"],
+    "Manufacturing, Logistics & Transport": ["Warehouse Associate", "Truck / Delivery Driver", "Forklift Operator", "Machine Operator", "Production Worker", "Logistics Coordinator", "Operations Manager", "Other"],
+    "Office, Admin & Customer Support": ["Customer Service Rep", "Administrative Assistant", "Data Entry Clerk", "Receptionist", "Office Manager", "Call Center Agent", "Executive Assistant", "Other"],
+    "Construction & Trades": ["Construction Worker", "Electrician", "Plumber", "HVAC Technician", "Welder", "Carpenter", "Site Supervisor", "Other"],
+    "Tech, Marketing & Media": ["Software Engineer", "Data Analyst", "Marketing Manager", "Sales Representative", "Product Manager", "Content Creator", "Designer", "Other"],
+    "Other": ["Manager", "Specialist", "Coordinator", "Analyst", "Technician", "Assistant", "Other"]
+  };
+
+  Quiz.prototype.start = function () { this.enter(1); };
+  Quiz.prototype.clear = function () { this._timers.forEach(function (t) { clearTimeout(t); }); this._timers = []; };
+  Quiz.prototype.mount = function (node) { this.root.replaceChildren(node); };
+
+  Quiz.prototype.track = function (name, props) {
+    console.log("[track]", name, props || {});
+    whenAmplitudeReady(function () {
+      try { window.amplitude.track(name, props); } catch (e) { console.error(e); }
+    });
+  };
+
+  Quiz.prototype.frames = function (dur, onUpdate, onDone) {
+    var n = Math.max(1, Math.round(dur / 60));
+    for (var i = 1; i <= n; i++) {
+      (function (i) {
+        this._timers.push(setTimeout(function () { onUpdate(i / n); if (i === n && onDone) onDone(); }, (dur / n) * i));
+      }).call(this, i);
+    }
+  };
+
+  Quiz.prototype.enter = function (n) {
+    this.clear();
+    this._refs = {};
+    this.state.screen = n;
+    this.mount(n === 1 ? this.buildWelcome() : this.buildScreen(n));
+    this.track("view_quiz_step", { step: n });
+    if (this.EVENT_NAMES[n]) this.track(this.EVENT_NAMES[n], {});
+    if (n === 14) this.track("quiz_midpoint_reached", {});
+    if (n === 26) this.track("complete_quiz", {});
+    if (n === 1) this.runWelcomeLoader();
+    if (n === 6) this.runPersonalizing();
+    if (n === 7) this.runFlash();
+    if (n === 11) this.runNoticed();
+    if (n === 23) this.runBuilding();
+    if (n === 24) { this.runScore(); var self24 = this; this._timers.push(setTimeout(function () { self24.advanceFrom(24); }, 2600)); }
+    if (n === 25) { var self25 = this; this._timers.push(setTimeout(function () { self25.advanceFrom(25); }, 3000)); }
+  };
+
+  Quiz.prototype.go = function (n) { this._history.push(this.state.screen); this.enter(n); };
+  Quiz.prototype.back = function () {
+    while (this._history.length) {
+      var prev = this._history.pop();
+      if (!this.AUTO.has(prev)) { this.enter(prev); return; }
+    }
+  };
+  Quiz.prototype.advanceFrom = function (n) { var nx = this.ORDER[this.ORDER.indexOf(n) + 1]; if (nx) this.go(nx); };
+  Quiz.prototype.skip = function () { if (this.state.screen === 1) this.go(2); };
+
+  // Repaints just the selected-state of the CURRENTLY mounted screen's option
+  // cards (set up by the screen's own build*() function as this._refs.repaint).
+  // Deliberately does NOT remount/replace the screen's DOM node — a full
+  // remount would replay the screen's entrance animation (rc-fade + the
+  // per-card stagger) on every single tap, which reads as a visible "jump"
+  // each time an option (or, for multi-select, each option) is selected.
+  Quiz.prototype.repaintSelection = function () {
+    if (this._refs.repaint) this._refs.repaint();
+  };
+
+  Quiz.prototype.answer = function (key, value, fromScreen) {
+    this.state.answers = Object.assign({}, this.state.answers, (function (o) { o[key] = value; return o; })({}));
+    this.track("answer", { name: key, answer: value });
+    this.repaintSelection();
+    var self = this;
+    this._timers.push(setTimeout(function () { self.advanceFrom(fromScreen); }, 260));
+  };
+  Quiz.prototype.toggle = function (key, value) {
+    var cur = Array.isArray(this.state.answers[key]) ? this.state.answers[key].slice() : [];
+    var idx = cur.indexOf(value);
+    if (idx >= 0) cur.splice(idx, 1); else cur.push(value);
+    this.state.answers = Object.assign({}, this.state.answers, (function (o) { o[key] = cur; return o; })({}));
+    this.track("answer_toggle", { name: key, answer: value, selected: idx < 0 });
+    this.repaintSelection();
+  };
+  Quiz.prototype.toggleAll = function (key, allLabels) {
+    var cur = Array.isArray(this.state.answers[key]) ? this.state.answers[key] : [];
+    var full = cur.length === allLabels.length;
+    var next = full ? [] : allLabels.slice();
+    this.state.answers = Object.assign({}, this.state.answers, (function (o) { o[key] = next; return o; })({}));
+    this.track("answer_toggle", { name: key, answer: "all_of_the_above", selected: !full });
+    this.repaintSelection();
+  };
+
+  Quiz.prototype.computeScore = function () {
+    var a = Object.values(this.state.answers).filter(function (v) { return v !== undefined && v !== ""; }).length;
+    return a ? Math.min(89, 78 + 2 * a) : 89;
+  };
+
+  // ---------------- animation drivers (direct DOM refs — no full rebuild per frame) ----------------
+  Quiz.prototype.runWelcomeLoader = function () {
+    var self = this;
+    this.frames(3800, function (p) { self._refs.loaderFill.style.width = (p * 100) + "%"; }, function () { self.go(2); });
+  };
+  Quiz.prototype.runPersonalizing = function () {
+    var self = this, r = this._refs.ring, labels = this._refs.personalizingLabels;
+    this.frames(4700, function (p) {
+      var frac = Math.min(1, p);
+      r.circle.setAttribute("stroke-dashoffset", (r.circ * (1 - frac)).toFixed(1));
+      r.pctText.textContent = Math.round(frac * 100) + "%";
+    });
+    var cur = -1;
+    function setLabel(idx) {
+      idx = Math.min(idx, labels.length - 1);
+      if (idx === cur) return;
+      cur = idx;
+      self._refs.personalizingLabelWrap.replaceChildren(
+        h("div", { style: { fontSize: "14px", lineHeight: "20px", fontWeight: 500, color: "#27292A", textAlign: "center", animation: "rc-fade .35s ease both" } }, labels[idx])
+      );
+    }
+    setLabel(0);
+    var i = 0;
+    function stepOnce() {
+      self.frames(1000, function () {}, function () {
+        i++;
+        setLabel(i);
+        if (i < 4) self._timers.push(setTimeout(stepOnce, 180));
+        else self._timers.push(setTimeout(function () { self.go(7); }, 180));
+      });
+    }
+    stepOnce();
+    this._timers.push(setTimeout(function () { if (self.state.screen === 6) self.go(7); }, 6200));
+  };
+  Quiz.prototype.runFlash = function () {
+    var self = this, target = 2172899;
+    this.frames(2500, function (p) {
+      self._refs.counterEl.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toLocaleString("en-US");
+    });
+  };
+  Quiz.prototype.runNoticed = function () {
+    var self = this, CH = 210;
+    this.frames(560, function (p) {
+      var pct = Math.round(92 * (1 - Math.pow(1 - p, 2)));
+      self._refs.noticed.bar.style.height = Math.round(CH * (pct / 100)) + "px";
+    }, function () { self._refs.noticed.emoji.style.display = "inline-flex"; });
+  };
+  Quiz.prototype.runBuilding = function () {
+    var self = this, n = 5, fill = 850, stagger = 950, doneCount = 0;
+    var refs = this._refs.building;
+    var _loop = function (i) {
+      self._timers.push(setTimeout(function () {
+        refs[i].row.style.opacity = "1";
+        self.frames(fill, function (p) {
+          var pct = Math.round(p * 100);
+          refs[i].barFill.style.width = pct + "%";
+          refs[i].pctText.textContent = pct + "%";
+          refs[i].lead.style.background = "#006DCC";
+          refs[i].lead.style.border = "2px solid #006DCC";
+        }, function () {
+          refs[i].lead.replaceWith(self.markCircle(true, "20px"));
+          doneCount++;
+          if (doneCount === n) self._timers.push(setTimeout(function () { self.go(24); }, 450));
+        });
+      }, i * stagger));
+    };
+    for (var i = 0; i < n; i++) _loop(i);
+  };
+  Quiz.prototype.runScore = function () {
+    var self = this, target = this.computeScore(), r = this._refs.score;
+    this.frames(1100, function (p) {
+      var score = Math.round(target * (1 - Math.pow(1 - p, 3)));
+      var cat = score < 40 ? r.cats[0] : score < 60 ? r.cats[1] : score < 80 ? r.cats[2] : r.cats[3];
+      r.badge.style.background = cat.c; r.badge.textContent = cat.n;
+      r.bubbleText.textContent = String(score);
+      r.bubble.style.left = score + "%";
+      r.thumb.style.left = score + "%"; r.thumb.style.background = cat.c;
+      r.subNumber.textContent = score + "%";
+      r.lblEls.forEach(function (el, i) {
+        var on = r.cats[i].n === cat.n;
+        el.style.fontWeight = on ? "700" : "500";
+        el.style.color = on ? "#27292A" : "#62666A";
+      });
+    });
+  };
+
+  // ---------------- shared UI ----------------
+  Quiz.prototype.logo = function () { return h("img", { src: RESOURCES.resumecoachLogo, alt: "ResumeCoach", style: { width: "120px", height: "auto", display: "block" } }); };
+  Quiz.prototype.eyebrow = function (text) { return h("div", { style: { fontSize: "12px", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", color: "#8A8F93" } }, text); };
+  Quiz.prototype.eyebrowBlue = function (text) { return h("div", { style: { fontSize: "14px", fontWeight: 500, color: "#006DCC" } }, text); };
+  Quiz.prototype.heroTitle = function (segs) {
+    return h("h2", { style: { margin: "12px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } },
+      segs.map(function (s) {
+        return h("span", { style: s[1] === "grad" ? { background: "linear-gradient(90deg,#D21FFF,#0057A3)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", fontWeight: 700 } : { color: s[1] ? "#006DCC" : "inherit", fontWeight: s[1] ? 700 : "inherit" } }, s[0]);
+      }));
+  };
+  Quiz.prototype.topBar = function (showBack) {
+    var self = this;
+    var backBtn = showBack ? h("div", { onClick: function () { self.back(); }, role: "button", "aria-label": "Back",
+      dangerouslySetInnerHTML: { __html: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.5825 6.59249H3.4125L8.2925 1.71249C8.6825 1.32249 8.6825 0.682486 8.2925 0.292486C8.10567 0.105233 7.85202 0 7.5875 0C7.32298 0 7.06933 0.105233 6.8825 0.292486L0.2925 6.88249C-0.0975 7.27249 -0.0975 7.90249 0.2925 8.29249L6.8825 14.8825C7.2725 15.2725 7.9025 15.2725 8.2925 14.8825C8.6825 14.4925 8.6825 13.8625 8.2925 13.4725L3.4125 8.59249H14.5825C15.1325 8.59249 15.5825 8.14249 15.5825 7.59249C15.5825 7.04249 15.1325 6.59249 14.5825 6.59249Z" fill="#62666A"/></svg>' },
+      style: { position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } }) : null;
+    return h("div", { style: { height: "56px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px", position: "relative", flexShrink: 0 } }, [backBtn, this.logo()]);
+  };
+  Quiz.prototype.progress = function (n) {
+    var pct = (((this.ORDER.indexOf(n) + 1) / this.ORDER.length) * 100).toFixed(1);
+    return h("div", { style: { height: "6px", background: "#DEE1E3", margin: "2px 24px 0", borderRadius: "4px", overflow: "hidden", flexShrink: 0 } },
+      h("div", { style: { width: pct + "%", height: "100%", background: "#006DCC", borderRadius: "4px", transition: "width .3s ease" } }));
+  };
+  Quiz.prototype.wrap = function (children) { return h("div", { style: { position: "absolute", inset: 0, background: "#FFFFFF", display: "flex", flexDirection: "column", boxSizing: "border-box", animation: "rc-fade .4s ease both" } }, children); };
+  Quiz.prototype.checkCircle = function (bg, stroke, size) {
+    var svg = '<svg viewBox="0 0 14 14" width="62%" height="62%"><path d="M3 7.2 L5.8 10 L11 4" stroke="' + stroke + '" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    return h("div", { style: { width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }, dangerouslySetInnerHTML: { __html: svg } });
+  };
+  Quiz.prototype.squareBox = function (checked, size) {
+    var chk = '<svg viewBox="0 0 14 14" width="62%" height="62%"><path d="M3 7.2 L5.8 10 L11 4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    return h("div", { style: { width: size, height: size, borderRadius: "6px", boxSizing: "border-box", background: checked ? "#006DCC" : "#FFFFFF", border: checked ? "2px solid #006DCC" : "2px solid #DEE1E3", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }, dangerouslySetInnerHTML: { __html: checked ? chk : "" } });
+  };
+  Quiz.prototype.cta = function (label, onClick, grad) {
+    return h("div", { style: { padding: "14px 24px 26px", flexShrink: 0 } },
+      h("div", { onClick: onClick, className: "rc-btn" + (grad ? " rc-btn--grad" : ""), style: { width: "100%", minHeight: "48px", background: grad ? "linear-gradient(90deg,#D21FFF,#0057A3)" : "#006DCC", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } },
+        h("span", { style: { fontSize: "16px", fontWeight: 500, color: "#FFFFFF" } }, label)));
+  };
+  // The ONE conversion CTA (S26 "Build this CV now"). Per QUIZ_FUNNEL_SPEC.md
+  // §3.1: real href, native data-amplitude-event="click_cta", and NO click
+  // listener of our own — the plugin's own handler tracks then navigates.
+  Quiz.prototype.finalCta = function (label, grad) {
+    return h("div", { style: { padding: "14px 24px 26px", flexShrink: 0 } },
+      h("a", {
+        href: FINAL_CTA_HREF,
+        "data-amplitude-event": "click_cta",
+        "data-amplitude-name": FINAL_CTA_NAME,
+        className: "rc-cta" + (grad ? " rc-cta--grad" : ""),
+        style: { width: "100%", minHeight: "48px", background: grad ? "linear-gradient(90deg,#D21FFF,#0057A3)" : "#006DCC", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", boxSizing: "border-box" }
+      }, h("span", { style: { fontSize: "16px", fontWeight: 500, color: "#FFFFFF" } }, label)));
+  };
+  Quiz.prototype.markCircle = function (ok, size) {
+    var g = ok
+      ? '<svg viewBox="0 0 16 16" width="60%" height="60%"><path d="M3.5 8.2 L6.5 11 L12.5 4.5" stroke="#00B786" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg viewBox="0 0 16 16" width="52%" height="52%"><path d="M4 4 L12 12 M12 4 L4 12" stroke="#F15E29" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+    return h("div", { style: { width: size, height: size, borderRadius: "50%", background: ok ? "#DAF8F1" : "#FDE7DF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }, dangerouslySetInnerHTML: { __html: g } });
+  };
+  Quiz.prototype.starSquare = function (size) {
+    var star = '<svg viewBox="0 0 24 24" width="66%" height="66%" fill="#FFFFFF"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z"/></svg>';
+    return h("div", { style: { width: size, height: size, borderRadius: "3px", background: "#00B67A", display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: star } });
+  };
+  Quiz.prototype.starRow = function (count, size) {
+    var self = this;
+    return h("div", { style: { display: "flex", gap: "3px" } }, Array.from({ length: count }, function () { return self.starSquare(size); }));
+  };
+
+  // ---------------- screen builders ----------------
+  Quiz.prototype.buildWelcome = function () {
+    var self = this;
+    var root = document.createElement("div");
+    root.style.cssText = "position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,87,163,0.10) 0%,rgba(0,109,204,0.10) 55%,rgba(210,31,255,0.10) 100%),#FFFFFF;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;gap:24px;padding:30px 24px 96px;box-sizing:border-box;cursor:pointer;font-family:Roboto,sans-serif;overflow-y:auto;";
+    var logoRow = ["Accenture", "Amazon", "Tesla", "DHL", "Google", "Uber", "Visa"].map(function (name, i) {
+      var key = ["brandAccenture", "brandAmazon", "brandTesla", "brandDhl", "brandGoogle", "brandUber", "brandVisa"][i];
+      return '<img src="' + RESOURCES[key] + '" alt="' + name + '" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;">';
+    }).join("") + '<div style="width:44px;height:44px;border-radius:10px;background:#007DB8;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;letter-spacing:-0.2px;flex:none;">DELL</div>';
+    var logoRowGhost = ["", "", "", "", "", "", ""].map(function (_, i) {
+      var key = ["brandAccenture", "brandAmazon", "brandTesla", "brandDhl", "brandGoogle", "brandUber", "brandVisa"][i];
+      return '<img src="' + RESOURCES[key] + '" alt="" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;">';
+    }).join("") + '<div style="width:44px;height:44px;border-radius:10px;background:#007DB8;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;letter-spacing:-0.2px;flex:none;">DELL</div>';
+    root.innerHTML =
+      '<img src="' + RESOURCES.resumecoachLogo + '" alt="ResumeCoach" style="width:120px;height:auto;display:block;">' +
+      '<h1 style="margin:6px 0 0;font-size:36px;line-height:44px;font-weight:500;color:#27292A;text-align:center;text-wrap:balance;animation:rc-fade .55s ease .05s both;">Your journey to<br>a better CV and<br>a <span style="background:linear-gradient(90deg,#D21FFF,#0057A3);-webkit-background-clip:text;background-clip:text;color:transparent;">better job</span><br>starts here</h1>' +
+      '<div style="width:100%;border-radius:8px;background:rgba(255,255,255,0.85);box-shadow:inset 0 0 0 1px #E8E8F0,0 2px 8px rgba(0,0,0,0.05);padding:16px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;align-items:stretch;">' +
+        '<div style="display:flex;align-items:flex-start;gap:6px;">' +
+          '<span style="font-family:Georgia,\'Times New Roman\',serif;font-size:56px;line-height:0.7;font-weight:700;color:#27292A;flex-shrink:0;width:26px;display:block;position:relative;top:0;">&#8220;</span>' +
+          '<p style="margin:0;font-size:14px;line-height:20px;font-weight:400;font-style:italic;color:#27292A;text-align:left;">The fastest way to a recruiter-ready CV I\'ve ever seen. Genuinely impressive.</p>' +
+        '</div>' +
+        '<img src="' + RESOURCES.nyt + '" alt="The New York Times" style="width:150px;height:auto;object-fit:contain;margin:8px 0 0 32px;display:block;">' +
+      '</div>' +
+      '<div style="width:100%;margin-top:18px;">' +
+        '<p style="margin:0 0 14px;text-align:center;font-size:14px;font-weight:700;color:#27292A;">Our users have been hired by</p>' +
+        '<div style="width:calc(100% + 48px);margin:0 -24px;overflow:hidden;">' +
+          '<div style="display:flex;width:max-content;animation:rc-marquee 26s linear infinite;will-change:transform;">' +
+            '<div style="display:flex;align-items:center;gap:14px;padding-right:14px;">' + logoRow + '</div>' +
+            '<div aria-hidden="true" style="display:flex;align-items:center;gap:14px;padding-right:14px;">' + logoRowGhost + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="position:absolute;left:0;right:0;bottom:0;padding:16px 24px 24px;box-sizing:border-box;">' +
+        '<p style="margin:0 0 12px;text-align:center;font-size:12px;font-weight:500;color:#27292A;">Loading questions</p>' +
+        '<div style="width:100%;height:10px;background:#E5E7EB;border-radius:999px;overflow:hidden;">' +
+          '<div id="rc-loader-fill" style="width:0%;height:100%;background:#0077E6;border-radius:999px;transition:width .1s linear;"></div>' +
+        '</div>' +
+      '</div>';
+    root.addEventListener("click", function () { self.skip(); });
+    this._refs.loaderFill = root.querySelector("#rc-loader-fill");
+    return root;
+  };
+
+  Quiz.prototype.buildQuestion = function (n) {
+    var self = this, c = this.QUESTIONS[n], raw = this.state.answers[c.key];
+    var multi = !!c.multi;
+    var selArr = multi ? (Array.isArray(raw) ? raw : []) : null;
+    var realOpts = c.opts.filter(function (o) { return !o.all; });
+    var cardMeta = [];
+    var cards = c.opts.map(function (o, i) {
+      var isAll = !!o.all;
+      var on = multi ? (isAll ? (selArr.length === realOpts.length && realOpts.length > 0) : selArr.indexOf(o.l) >= 0) : raw === o.l;
+      var lead = null;
+      if (o.e) lead = h("span", { style: { fontSize: "22px", lineHeight: 1, width: "26px", textAlign: "center", flexShrink: 0 } }, o.e);
+      var labelEl = o.desc
+        ? h("span", { style: { flex: 1, fontSize: "15px", color: "#27292A" } }, [h("span", { style: { fontWeight: 700 } }, o.l), h("span", { style: { fontWeight: 400 } }, " " + o.desc)])
+        : o.bold
+          ? h("span", { style: { flex: 1, fontSize: "15px", fontWeight: 400, color: "#27292A" } }, [h("span", { style: { fontWeight: 700 } }, o.bold), o.l.slice(o.bold.length)])
+          : h("span", { style: { flex: 1, fontSize: "15px", fontWeight: 500, color: "#27292A" } }, o.l);
+      var trail = multi ? self.squareBox(on, "20px") : null;
+      var onClick = function () {
+        if (!multi) return self.answer(c.key, o.l, n);
+        if (isAll) return self.toggleAll(c.key, realOpts.map(function (r) { return r.l; }));
+        return self.toggle(c.key, o.l);
+      };
+      var cardEl = h("div", { onClick: onClick,
+        style: { display: "flex", alignItems: "center", gap: "13px", padding: "16px", borderRadius: "12px", cursor: "pointer", background: on ? "#EBF6FF" : "#FFFFFF", border: on ? "2px solid #006DCC" : "1px solid #DEE1E3", boxSizing: "border-box", boxShadow: on ? "none" : "0 1px 2px rgba(39,41,42,0.04)", transition: "background .18s ease, border-color .18s ease, box-shadow .18s ease", animation: "rc-fade .4s ease " + (0.05 + i * 0.05).toFixed(2) + "s both" } },
+        [lead, labelEl, trail]);
+      cardMeta.push({ el: cardEl, trailEl: trail, opt: o, isAll: isAll });
+      return cardEl;
+    });
+    var children = [this.topBar(c.back), this.progress(n),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "24px 24px 20px" } }, [
+        h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, c.title),
+        c.subtitle ? h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, c.subtitle) : null,
+        h("div", { style: { marginTop: "22px", display: "flex", flexDirection: "column", gap: "10px" } }, cards)
+      ])];
+    var continueBtnEl = null, continueEnabled = false;
+    if (multi) {
+      continueEnabled = selArr.length > 0;
+      continueBtnEl = h("div", { onClick: function () { if (continueEnabled) self.advanceFrom(n); }, style: { width: "100%", minHeight: "48px", background: continueEnabled ? "#006DCC" : "#C2E2FF", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: continueEnabled ? "pointer" : "default", transition: "background .15s ease" } },
+        h("span", { style: { fontSize: "16px", fontWeight: 500, color: "#FFFFFF" } }, "Continue"));
+      children.push(h("div", { style: { padding: "14px 24px 26px", flexShrink: 0 } }, continueBtnEl));
+    }
+    // Repaints selection state in place (see repaintSelection above) instead
+    // of remounting the screen, so tapping an option never replays the
+    // entrance animation.
+    this._refs.repaint = function () {
+      var raw2 = self.state.answers[c.key];
+      var selArr2 = multi ? (Array.isArray(raw2) ? raw2 : []) : null;
+      cardMeta.forEach(function (m) {
+        var on2 = multi ? (m.isAll ? (selArr2.length === realOpts.length && realOpts.length > 0) : selArr2.indexOf(m.opt.l) >= 0) : raw2 === m.opt.l;
+        m.el.style.background = on2 ? "#EBF6FF" : "#FFFFFF";
+        m.el.style.border = on2 ? "2px solid #006DCC" : "1px solid #DEE1E3";
+        m.el.style.boxShadow = on2 ? "none" : "0 1px 2px rgba(39,41,42,0.04)";
+        if (m.trailEl) {
+          m.trailEl.style.background = on2 ? "#006DCC" : "#FFFFFF";
+          m.trailEl.style.border = on2 ? "2px solid #006DCC" : "2px solid #DEE1E3";
+          m.trailEl.innerHTML = on2 ? '<svg viewBox="0 0 14 14" width="62%" height="62%"><path d="M3 7.2 L5.8 10 L11 4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : "";
+        }
+      });
+      if (multi && continueBtnEl) {
+        var ok2 = selArr2.length > 0;
+        continueEnabled = ok2;
+        continueBtnEl.style.background = ok2 ? "#006DCC" : "#C2E2FF";
+        continueBtnEl.style.cursor = ok2 ? "pointer" : "default";
+      }
+    };
+    return this.wrap(children);
+  };
+
+  Quiz.prototype.buildRole = function () {
+    var self = this, s = this.state;
+    var chips = this.ROLE_CHIPS[s.answers.sector] || this.ROLE_CHIPS["Other"];
+    var chipMeta = [];
+    var chipEls = chips.map(function (ch, i) {
+      var on = s.answers.target_role === ch;
+      var el = h("div", { onClick: function () { self.answer("target_role", ch, 5); },
+        style: { display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: "48px", padding: "12px 10px", borderRadius: "12px", fontSize: "14px", fontWeight: 500, cursor: "pointer", background: on ? "#EBF6FF" : "#FFFFFF", color: on ? "#006DCC" : "#27292A", border: on ? "2px solid #006DCC" : "1px solid #DEE1E3", boxSizing: "border-box", transition: "background .15s ease, border-color .15s ease", animation: "rc-fade .4s ease " + (0.04 + i * 0.04).toFixed(2) + "s both" } }, ch);
+      chipMeta.push({ el: el, ch: ch });
+      return el;
+    });
+    this._refs.repaint = function () {
+      var sel = self.state.answers.target_role;
+      chipMeta.forEach(function (m) {
+        var on2 = sel === m.ch;
+        m.el.style.background = on2 ? "#EBF6FF" : "#FFFFFF";
+        m.el.style.color = on2 ? "#006DCC" : "#27292A";
+        m.el.style.border = on2 ? "2px solid #006DCC" : "1px solid #DEE1E3";
+      });
+    };
+    return this.wrap([this.topBar(true), this.progress(5),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "24px 24px 20px" } }, [
+        h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A" } }, "What role are you aiming for?"),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, "We'll tailor the plan to that role."),
+        h("div", { style: { marginTop: "22px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" } }, chipEls)
+      ])]);
+  };
+
+  Quiz.prototype.buildPersonalizing = function () {
+    var labels = ["Removing irrelevant fields", "Matching your experience level", "Adapting content to your industry", "Prioritizing what recruiters look for"];
+    var r = 54, circ = 2 * Math.PI * r;
+    var ringWrap = h("div", { dangerouslySetInnerHTML: { __html:
+      '<svg width="140" height="140" viewBox="0 0 140 140">' +
+      '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#EBF0F3" stroke-width="10"/>' +
+      '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#006DCC" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + circ.toFixed(1) + '" stroke-dashoffset="' + circ.toFixed(1) + '" transform="rotate(-90 70 70)" style="transition:stroke-dashoffset .1s linear"/>' +
+      '</svg>' } });
+    var pctText = h("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "30px", fontWeight: 700, color: "#27292A" } }, "0%");
+    var labelWrap = h("div", { style: { minHeight: "24px", display: "flex", alignItems: "center", justifyContent: "center" } });
+    var circleEl = ringWrap.querySelectorAll("circle")[1];
+    this._refs.ring = { circle: circleEl, pctText: pctText, circ: circ };
+    this._refs.personalizingLabels = labels;
+    this._refs.personalizingLabelWrap = labelWrap;
+    return h("div", { style: { position: "absolute", inset: 0, background: "#FFFFFF", display: "flex", flexDirection: "column", padding: "0 26px 32px", boxSizing: "border-box", animation: "rc-fade .4s ease both" } }, [
+      this.topBar(false),
+      h("div", { style: { height: "12px" } }),
+      h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textAlign: "center", textWrap: "balance" } }, "Getting things ready for you."),
+      h("p", { style: { margin: "10px 0 30px", fontSize: "14px", lineHeight: "20px", color: "#27292A", textAlign: "center" } }, "We're tailoring the right structure, keywords and approach for your role."),
+      h("div", { style: { position: "relative", width: "140px", height: "140px", alignSelf: "center", marginBottom: "26px" } }, [ringWrap, pctText]),
+      labelWrap
+    ]);
+  };
+
+  Quiz.prototype.buildFlash = function () {
+    var counterEl = h("div", { style: { fontFamily: "Roboto,sans-serif", fontWeight: 900, fontSize: "48px", lineHeight: 1.05, letterSpacing: "-0.5px", background: "linear-gradient(90deg,#D21FFF,#0057A3)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", marginTop: "6px" } }, "0");
+    this._refs.counterEl = counterEl;
+    var showcaseEl = h("img", { src: RESOURCES.peopleHired, alt: "Professionals hired with ResumeCoach", decoding: "async", style: { display: "block", width: "100%", maxWidth: "328px", height: "auto" } });
+    var self = this;
+    return this.wrap([this.topBar(true), this.progress(7),
+      h("div", { style: { flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "22px 24px 0", textAlign: "left" } }, [
+        this.eyebrow("TRUSTED BY MILLIONS"),
+        counterEl,
+        h("p", { style: { margin: "4px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "CVs built with ResumeCoach."),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["We don't just build your resume. ", h("span", { style: { fontWeight: 700 } }, "We craft the one that puts you ahead of other candidates in your role"), ", and pair it with the tools to keep you there: visibility, preparation, and the offers that follow."]),
+        h("div", { style: { marginTop: "14px", alignSelf: "center" } }, showcaseEl)
+      ]),
+      this.cta("Continue", function () { self.advanceFrom(7); })]);
+  };
+
+  Quiz.prototype.buildNoticed = function () {
+    var self = this, CH = 210;
+    var leftH = Math.round(CH * 0.40);
+    var rightBarDiv = h("div", { style: { width: "100%", height: "0px", background: "#006DCC", borderRadius: "10px 10px 0 0" } });
+    var rightEmoji = h("span", { style: { fontSize: "18px", display: "none" }, role: "img", "aria-label": "celebrate" }, "🎉");
+    this._refs.noticed = { bar: rightBarDiv, emoji: rightEmoji };
+    function col(h_, color, cat, val, hot, emojiEl) {
+      return h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", width: "96px" } }, [
+        h("div", { style: { width: "100%", height: CH + "px", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center" } }, [
+          h("div", { style: { position: "relative", fontSize: "22px", fontWeight: 700, color: hot ? "#006DCC" : "#8A8F93", marginBottom: "8px", display: "flex", alignItems: "center", gap: "5px" } }, [
+            h("span", { style: { position: "relative" } }, val),
+            emojiEl
+          ]),
+          h_
+        ]),
+        h("div", { style: { marginTop: "10px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.5px", color: hot ? "#006DCC" : "#62666A", textAlign: "center" } }, cat)
+      ]);
+    }
+    var leftBar = h("div", { style: { width: "100%", height: leftH + "px", background: "#DEE1E3", borderRadius: "10px 10px 0 0" } });
+    return this.wrap([this.topBar(true), this.progress(11),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "26px 24px 8px" } }, [
+        this.eyebrow("You're not alone"),
+        this.heroTitle([["With ResumeCoach, you get noticed ", false], ["2x more", "grad"], [".", false]]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["The frustrations you just shared? We fix them. Applicants using our plan ", h("span", { style: { fontWeight: 700 } }, "get twice the callbacks.")]),
+        h("div", { style: { marginTop: "30px", display: "flex", justifyContent: "center", alignItems: "flex-end", gap: "40px" } }, [
+          col(leftBar, "#DEE1E3", "ON YOUR OWN", "1x", false, null),
+          col(rightBarDiv, "#006DCC", "RESUMECOACH", "2x", true, rightEmoji)
+        ])
+      ]),
+      this.cta("Continue", function () { self.advanceFrom(11); })]);
+  };
+
+  Quiz.prototype.buildAtsHero = function () {
+    var self = this;
+    return this.wrap([this.topBar(true), this.progress(14),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "26px 24px 8px" } }, [
+        this.eyebrowBlue("ATS CHECKER"),
+        h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "We tune your CV to pass every recruiter filter."),
+        h("img", { src: RESOURCES.atsPassedV2, alt: "CV passing ATS checks", decoding: "async", style: { display: "block", width: "100%", maxWidth: "196px", height: "auto", margin: "6px auto 2px" } }),
+        h("p", { style: { margin: "14px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["Don't let ATS filters block your CV. We test it against ", h("span", { style: { fontWeight: 700 } }, "real recruiter criteria"), " and ", h("span", { style: { fontWeight: 700 } }, "give you actionable feedback"), " on format, content, and impact."])
+      ]),
+      this.cta("Continue", function () { self.advanceFrom(14); })]);
+  };
+
+  Quiz.prototype.buildJobMatch = function () {
+    var self = this;
+    return this.wrap([this.topBar(true), this.progress(16),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "16px 24px 8px" } }, [
+        this.eyebrowBlue("JOB MATCH"),
+        h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, ["We'll find jobs where you'd have a ", h("span", { style: { background: "linear-gradient(90deg,#D21FFF,#0057A3)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", fontWeight: 700 } }, "90%+ match"), "."]),
+        h("img", { src: RESOURCES.jobMatchCardsV2, alt: "Top job matches for your resume", decoding: "async", style: { margin: "8px auto 6px", width: "100%", maxWidth: "300px", display: "block" } }),
+        h("h2", { style: { margin: "18px 0 0", fontSize: "16px", lineHeight: "22px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Stop wasting time on random job applications."),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, "We match your resume and preferences with live openings to deliver high-fit jobs, helping you apply faster and land more interviews.")
+      ]),
+      this.cta("Continue", function () { self.advanceFrom(16); })]);
+  };
+
+  Quiz.prototype.buildLinkedin = function () {
+    var self = this;
+    return this.wrap([this.topBar(true), this.progress(19),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "26px 24px 8px" } }, [
+        this.eyebrowBlue("LINKEDIN ANALYZER"),
+        h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, ["Make recruiters find you on ", h("span", { style: { color: "#006DCC", fontWeight: 700 } }, "LinkedIn"), "."]),
+        h("img", { src: RESOURCES.linkedinBeforeAfterV2, alt: "LinkedIn profile before and after", decoding: "async", style: { marginTop: "16px", width: "100%", display: "block" } }),
+        h("p", { style: { margin: "20px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["8 out of 10 ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "recruiters check LinkedIn first"), ". If your profile isn't optimized, ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "you don't exist"), " for them."]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, "We show you exactly what to fix, section by section, with a clear score.")
+      ]),
+      this.cta("Continue", function () { self.advanceFrom(19); })]);
+  };
+
+  Quiz.prototype.buildTrustpilot = function () {
+    var self = this;
+    return this.wrap([this.topBar(true), this.progress(21),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "14px 24px 8px" } }, [
+        this.eyebrowBlue("INTERVIEW PRACTICE"),
+        this.heroTitle([["Confidence isn't a trait. It's ", false], ["practice", true], [".", false]]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["The candidates who get offers ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "are the most prepared."), " We put you in front of real questions for your role, give you clear feedback on every answer, and let you train as many rounds as you need."]),
+        h("div", { style: { marginTop: "14px", background: "#EBF6FF", borderRadius: "12px", padding: "18px", animation: "rc-fade .35s ease both" } }, [
+          h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" } }, [
+            this.starRow(5, "20px"),
+            h("div", { style: { display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto" } }, [this.starSquare(15), h("span", { style: { fontSize: "14px", fontWeight: 700, color: "#191919" } }, "Trustpilot")])
+          ]),
+          h("p", { style: { margin: 0, fontSize: "18px", lineHeight: "25px", fontWeight: 700, color: "#27292A" } }, '"Rewrote my CV and I got 3 interviews in a week."'),
+          h("p", { style: { margin: "10px 0 0", fontSize: "13px", lineHeight: "20px", color: "#3B3D40" } }, "“I’d been applying for months with no replies. ResumeCoach restructured my experience and told me exactly what recruiters look for. Two weeks later I signed an offer — fully remote.”"),
+          h("p", { style: { margin: "12px 0 0", fontSize: "13px", fontWeight: 500, color: "#27292A" } }, "Ethan P., Data Analyst"),
+          h("div", { style: { marginTop: "14px", paddingTop: "12px", borderTop: "1px solid #C9E3FA", display: "flex", alignItems: "center", gap: "8px" } }, [
+            this.starRow(5, "16px"),
+            h("span", { style: { fontSize: "12px", color: "#62666A" } }, "Rated Excellent · 3,298 reviews on Trustpilot")
+          ])
+        ])
+      ]),
+      this.cta("Continue", function () { self.advanceFrom(21); })]);
+  };
+
+  Quiz.prototype.buildScore = function () {
+    var cats = [{ n: "Poor", c: "#F1453D" }, { n: "Fair", c: "#F5A623" }, { n: "Good", c: "#7DBE3C" }, { n: "Excellent", c: "#12A150" }];
+    var badge = h("div", { style: { marginTop: "22px", display: "inline-flex", alignSelf: "flex-start", background: cats[3].c, color: "#FFFFFF", fontSize: "14px", fontWeight: 700, borderRadius: "999px", padding: "6px 16px" } }, cats[3].n);
+    var bubbleText = h("div", { style: { background: "#FFFFFF", border: "1px solid #E7EAEC", boxShadow: "0 3px 10px rgba(39,41,42,0.15)", borderRadius: "8px", padding: "3px 11px", fontSize: "16px", fontWeight: 700, color: "#27292A" } }, "0");
+    var bubble = h("div", { style: { position: "absolute", top: "-34px", left: "0%", transform: "translateX(-50%)", transition: "left .25s ease" } }, bubbleText);
+    var thumb = h("div", { style: { position: "absolute", top: "50%", left: "0%", transform: "translate(-50%,-50%)", width: "20px", height: "20px", borderRadius: "50%", background: cats[0].c, border: "3px solid #FFFFFF", boxShadow: "0 2px 6px rgba(39,41,42,0.25)", transition: "left .25s ease" } });
+    var subNumber = h("span", { style: { fontWeight: 700, color: "#006DCC" } }, "0%");
+    var lblEls = cats.map(function (c) { return h("span", { style: { fontSize: "12px", fontWeight: 500, color: "#62666A" } }, c.n); });
+    this._refs.score = { badge: badge, bubbleText: bubbleText, bubble: bubble, thumb: thumb, subNumber: subNumber, lblEls: lblEls, cats: cats };
+    return this.wrap([this.topBar(true), this.progress(24),
+      h("div", { style: { flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: "26px 24px 40px", textAlign: "left" } }, [
+        this.eyebrow("You have real potential"),
+        h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Your potential to stand out."),
+        badge,
+        h("div", { style: { marginTop: "38px", position: "relative", width: "100%" } }, [
+          bubble,
+          h("div", { style: { width: "100%", height: "10px", borderRadius: "999px", background: "linear-gradient(90deg,#F1453D 0%,#F5A623 32%,#F5D423 52%,#7DBE3C 74%,#12A150 100%)" } }),
+          thumb
+        ]),
+        h("div", { style: { marginTop: "12px", display: "flex", justifyContent: "space-between" } }, lblEls),
+        h("div", { style: { marginTop: "44px", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A" } }, ["You're ", subNumber, " ready to stand out to recruiters."]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, "Based on your context, style and goals, you're closer than you think. Let's turn potential into offers.")
+      ])]);
+  };
+
+  Quiz.prototype.buildRecommendedCV = function () {
+    var styleKey = ((this.state.answers.personal_style || "Balanced").split(" ")[0]) || "Balanced";
+    var cityMap = { Classic: "Amsterdam", Modern: "Vienna", Creative: "Florence", Balanced: "Munich", Technical: "Stockholm" };
+    var imgMap = { Classic: RESOURCES.cvAmsterdam, Modern: RESOURCES.cvVienna, Creative: RESOURCES.cvFlorence, Balanced: RESOURCES.cvMunich, Technical: RESOURCES.cvStockholm };
+    var styleWord = cityMap[styleKey] || "Munich";
+    var src = imgMap[styleKey] || imgMap.Balanced;
+    var bullets = [
+      [["Perfect for you", true], [": adapted to your role, skills and target job.", false]],
+      [["Premium design", true], [" that stands out — and you can switch template or customize color, font and style anytime.", false]],
+      [["ATS-compliant:", true], [" passes the filters used by 90% of employers.", false]],
+      [["Ready to send", true], [": fill it in, download, and start applying ", false], ["in minutes", true], [".", false]]
+    ];
+    var thumb = h("div", { style: { margin: "20px auto 0", width: "224px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 12px 30px rgba(39,41,42,0.18)", border: "1px solid #EDEFF1" } },
+      h("img", { src: src, alt: styleWord + " CV template", style: { width: "100%", display: "block" } }));
+    var docSvg = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3B6FE0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="M14 3v5h5"/><path d="M18.5 13.5l2.2 2.2-4.7 4.7H14v-2z"/></svg>';
+    var linkSvg = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#12A67F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 13a3.8 3.8 0 0 0 5.7.4l2.4-2.4a3.8 3.8 0 0 0-5.4-5.4l-1.3 1.3"/><path d="M14.5 11a3.8 3.8 0 0 0-5.7-.4l-2.4 2.4a3.8 3.8 0 0 0 5.4 5.4l1.3-1.3"/></svg>';
+    var feats = [
+      { t: "Premium ATS templates", d: "Pass the filters that reject 75% of CVs.", img: RESOURCES.iconAts },
+      { t: "Unlimited resumes", d: "Multiple CVs, tailored to each job.", tint: "#EAF1FF", svg: docSvg },
+      { t: "Matching cover letters", d: "Written for you, aligned to the posting.", img: RESOURCES.iconCoverletter },
+      { t: "LinkedIn analysis", d: "A profile recruiters find and click.", img: RESOURCES.iconLinkedin },
+      { t: "Interview practice", d: "Train real questions. Walk in confident.", img: RESOURCES.iconInterview },
+      { t: "Job Match", d: "Jobs matched to you. You just apply.", img: RESOURCES.iconJobmatch },
+      { t: "Online shareable CV", d: "Send a link, see when they view it.", tint: "#E4F6EF", svg: linkSvg }
+    ];
+    var fIcon = function (c) {
+      return c.img
+        ? h("img", { src: c.img, alt: "", style: { width: "38px", height: "38px", display: "block" } })
+        : h("div", { style: { width: "38px", height: "38px", borderRadius: "11px", background: c.tint, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: c.svg } });
+    };
+    var moreEl = h("div", { style: { marginTop: "30px" } }, [
+      this.eyebrow("We give you more than a CV"),
+      h("p", { style: { margin: "8px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, "Everything you need, guided step by step."),
+      h("div", { style: { marginTop: "16px", marginLeft: "-24px", marginRight: "-24px", padding: "2px 24px 6px", display: "flex", gap: "12px", overflowX: "auto" } }, feats.map(function (c) {
+        return h("div", { style: { flexShrink: 0, width: "150px", display: "flex", flexDirection: "column", gap: "10px", background: "#FFFFFF", border: "1px solid #E7EAEC", borderRadius: "14px", padding: "15px 14px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" } }, [
+          fIcon(c),
+          h("div", {}, [
+            h("div", { style: { fontSize: "14px", fontWeight: 600, lineHeight: "18px", color: "#27292A" } }, c.t),
+            h("p", { style: { margin: "4px 0 0", fontSize: "12px", lineHeight: "16px", color: "#62666A" } }, c.d)
+          ])
+        ]);
+      }))
+    ]);
+    var self = this;
+    return this.wrap([this.topBar(true), this.progress(26),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "26px 24px 8px" } }, [
+        this.eyebrow("We've craft this for you!"),
+        h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, ["Your ideal CV style is ", h("span", { style: { background: "linear-gradient(90deg,#D21FFF,#0057A3)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", fontWeight: 700 } }, styleWord), "."]),
+        thumb,
+        h("div", { style: { marginTop: "22px", display: "flex", flexDirection: "column", gap: "13px" } }, bullets.map(function (segs) {
+          return h("div", { style: { display: "flex", alignItems: "flex-start", gap: "10px" } }, [
+            self.markCircle(true, "20px"),
+            h("span", { style: { fontSize: "14px", lineHeight: "20px", color: "#27292A", flex: 1 } }, segs.map(function (s) { return h("span", { style: { fontWeight: s[1] ? 700 : 400 } }, s[0]); }))
+          ]);
+        })),
+        moreEl
+      ]),
+      this.finalCta("Build this CV now", true)]);
+  };
+
+  Quiz.prototype.buildFeelDifference = function () {
+    var self = this;
+    var left = ["CV from scratch, hours lost", "No ATS check, filters reject it", "LinkedIn stays invisible", "Interviews you enter unprepared", "Jobs searched one by one"];
+    var right = ["CV built in minutes, done for you", "Every ATS filter passed", "Recruiters find and click", "Practice with real questions", "Jobs matched, you just apply"];
+    var grayX = function () { return h("div", { style: { width: "22px", height: "22px", borderRadius: "50%", background: "#EDEFF1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }, dangerouslySetInnerHTML: { __html: '<svg viewBox="0 0 16 16" width="52%" height="52%"><path d="M4 4 L12 12 M12 4 L4 12" stroke="#B5B8BA" stroke-width="2" fill="none" stroke-linecap="round"/></svg>' } }); };
+    var col = function (title, items, ok) {
+      return h("div", { style: { flex: 1, minWidth: 0 } }, [
+        h("div", { style: { fontSize: "15px", fontWeight: 700, color: "#27292A", marginBottom: "16px" } }, title),
+        h("div", { style: { display: "flex", flexDirection: "column", gap: "16px" } }, items.map(function (it) {
+          return h("div", { style: { display: "flex", alignItems: "flex-start", gap: "9px" } }, [ok ? self.markCircle(true, "22px") : grayX(), h("span", { style: { fontSize: "13px", lineHeight: "18px", fontWeight: 500, color: "#27292A", flex: 1 } }, it)]);
+        }))
+      ]);
+    };
+    return this.wrap([this.topBar(true), this.progress(25),
+      h("div", { onClick: function () { self.advanceFrom(25); }, style: { flex: 1, overflowY: "auto", padding: "26px 24px 26px", cursor: "pointer" } }, [
+        this.eyebrow("Why ResumeCoach"),
+        h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Feel the difference."),
+        h("p", { style: { margin: "10px 0 26px", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, "How things shift once you have us on your side."),
+        h("div", { style: { display: "flex", gap: "18px", alignItems: "flex-start" } }, [col("Before", left, false), col("With ResumeCoach", right, true)])
+      ])]);
+  };
+
+  Quiz.prototype.buildBuildingLoader = function () {
+    var steps = ["Reviewing your profile", "Selecting CV template", "Aligning content to Target Role", "Scanning Jobs that match your CV", "Curating your recommendation"];
+    var refs = [];
+    var items = steps.map(function (label) {
+      var lead = h("div", { style: { width: "20px", height: "20px", borderRadius: "50%", boxSizing: "border-box", background: "#FFFFFF", border: "2px solid #9AA0A5", flexShrink: 0 } });
+      var barFill = h("div", { style: { width: "0%", height: "100%", background: "#006DCC", borderRadius: "3px", transition: "width .12s linear" } });
+      var pctText = h("span", { style: { fontSize: "12px", fontWeight: 500, color: "#62666A" } }, "0%");
+      var row = h("div", { style: { opacity: 0.4, transition: "opacity .4s ease" } }, [
+        h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "7px" } }, [lead, h("span", { style: { fontSize: "14px", lineHeight: "20px", fontWeight: 500, color: "#27292A", flex: 1 } }, label), pctText]),
+        h("div", { style: { height: "5px", background: "#D3D7DA", borderRadius: "3px", overflow: "hidden" } }, barFill)
+      ]);
+      refs.push({ row: row, lead: lead, barFill: barFill, pctText: pctText });
+      return row;
+    });
+    this._refs.building = refs;
+    return h("div", { style: { position: "absolute", inset: 0, background: "#FFFFFF", display: "flex", flexDirection: "column", padding: "0 28px 32px", boxSizing: "border-box" } }, [
+      this.topBar(false),
+      h("div", { style: { height: "12px" } }),
+      h("p", { style: { margin: "0 0 30px", textAlign: "center", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Putting it all together…"),
+      h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } }, items)
+    ]);
+  };
+
+  Quiz.prototype.buildStyleCards = function () {
+    var self = this, c = this.QUESTIONS[13], raw = this.state.answers.personal_style;
+    var palette = { Classic: { s: "#3B6FE0", t: "#EAF1FF" }, Modern: { s: "#8B5CF6", t: "#EFEBFF" }, Creative: { s: "#70992E", t: "#EFF4E3" }, Balanced: { s: "#12A67F", t: "#E4F6EF" }, Technical: { s: "#3C75C7", t: "#EAF1FB" } };
+    var docIcon = function (color) { return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="' + color + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 14l2.2 2.2 4.3-4.4"/></svg>'; };
+    var cardMeta = [];
+    var cardEls = c.opts.map(function (o, i) {
+      var on = raw === o.l;
+      var pal = palette[o.l] || palette.Balanced;
+      var el = h("div", { onClick: function () { self.answer("personal_style", o.l, 13); },
+        style: { display: "flex", flexDirection: "column", gap: "11px", background: "#FFFFFF", border: on ? "2px solid #006DCC" : "1px solid #E7EAEC", borderRadius: "14px", padding: "15px 14px", boxShadow: on ? "none" : "0 1px 3px rgba(0,0,0,0.05)", cursor: "pointer", boxSizing: "border-box", transition: "border-color .18s ease", animation: "rc-fade .4s ease " + (0.05 + i * 0.05).toFixed(2) + "s both" } }, [
+        h("div", { style: { width: "40px", height: "40px", borderRadius: "11px", background: pal.t, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: docIcon(pal.s) } }),
+        h("div", {}, [
+          h("div", { style: { fontSize: "14px", fontWeight: 600, lineHeight: "18px", color: "#27292A" } }, o.l),
+          h("p", { style: { margin: "4px 0 0", fontSize: "12px", lineHeight: "16px", color: "#62666A" } }, o.desc)
+        ])
+      ]);
+      cardMeta.push({ el: el, opt: o });
+      return el;
+    });
+    this._refs.repaint = function () {
+      var sel = self.state.answers.personal_style;
+      cardMeta.forEach(function (m) {
+        var on2 = sel === m.opt.l;
+        m.el.style.border = on2 ? "2px solid #006DCC" : "1px solid #E7EAEC";
+        m.el.style.boxShadow = on2 ? "none" : "0 1px 3px rgba(0,0,0,0.05)";
+      });
+    };
+    return this.wrap([this.topBar(c.back), this.progress(13),
+      h("div", { style: { flex: 1, overflowY: "auto", padding: "24px 24px 20px" } }, [
+        h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, c.title),
+        c.subtitle ? h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, c.subtitle) : null,
+        h("div", { style: { marginTop: "22px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" } }, cardEls)
+      ])]);
+  };
+
+  Quiz.prototype.buildScreen = function (n) {
+    if (n === 13) return this.buildStyleCards();
+    if (this.QUESTIONS[n]) return this.buildQuestion(n);
+    if (n === 5) return this.buildRole();
+    if (n === 6) return this.buildPersonalizing();
+    if (n === 7) return this.buildFlash();
+    if (n === 11) return this.buildNoticed();
+    if (n === 14) return this.buildAtsHero();
+    if (n === 16) return this.buildJobMatch();
+    if (n === 19) return this.buildLinkedin();
+    if (n === 21) return this.buildTrustpilot();
+    if (n === 23) return this.buildBuildingLoader();
+    if (n === 24) return this.buildScore();
+    if (n === 25) return this.buildFeelDifference();
+    if (n === 26) return this.buildRecommendedCV();
+    return null;
+  };
+
+  // ---------------------------------------------------------------------
+  // Mount
+  // ---------------------------------------------------------------------
+  var root = document.getElementById("rc-quiz-root");
+  var quiz = new Quiz(root);
+  quiz.start();
+})();
+</script>
+</body>
+</html>
