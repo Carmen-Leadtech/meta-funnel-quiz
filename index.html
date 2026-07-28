@@ -105,8 +105,17 @@
     iconLinkedin: "assets/icon-linkedin.webp",
     iconInterview: "assets/icon-interview.webp",
     iconJobmatch: "assets/icon-jobmatch.webp",
-    people: "assets/people.webp"
+    people: "assets/people.webp",
+    trustpilotLogo: "assets/Trustpilot.svg.webp"
   };
+
+  // CSS properties where a bare number is legitimately unitless (mirrors the
+  // small list React's style prop treats the same way) — everything else
+  // gets "px" appended so a stray numeric style value (e.g. `{ width: 15 }`,
+  // valid as a React style prop but meaningless as a raw DOM style value)
+  // can't silently fall back to `auto` and blow an element up to its
+  // content's intrinsic size.
+  var UNITLESS_STYLE_PROPS = new Set(["opacity", "zIndex", "fontWeight", "lineHeight", "flex", "flexGrow", "flexShrink", "order", "zoom", "columnCount"]);
 
   // ---------------------------------------------------------------------
   // Minimal real-DOM element factory (drop-in for the old React.createElement
@@ -119,7 +128,13 @@
     for (var key in props) {
       var val = props[key];
       if (val == null || key === "key") continue;
-      if (key === "style") { Object.assign(el.style, val); }
+      if (key === "style") {
+        for (var sk in val) {
+          var sv = val[sk];
+          if (typeof sv === "number" && sv !== 0 && !UNITLESS_STYLE_PROPS.has(sk)) sv = sv + "px";
+          el.style[sk] = sv;
+        }
+      }
       else if (key === "className") { el.className = val; }
       else if (key === "dangerouslySetInnerHTML") { el.innerHTML = val.__html; }
       else if (key === "onClick") { el.addEventListener("click", val); }
@@ -693,7 +708,7 @@
         h("div", { style: { marginTop: "14px", background: "#EBF6FF", borderRadius: "12px", padding: "18px", animation: "rc-fade .35s ease both" } }, [
           h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" } }, [
             this.starRow(5, "20px"),
-            h("div", { style: { display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto" } }, [this.starSquare(15), h("span", { style: { fontSize: "14px", fontWeight: 700, color: "#191919" } }, "Trustpilot")])
+            h("img", { src: RESOURCES.trustpilotLogo, alt: "Trustpilot", style: { height: "18px", width: "auto", display: "block", marginLeft: "auto" } })
           ]),
           h("p", { style: { margin: 0, fontSize: "18px", lineHeight: "25px", fontWeight: 700, color: "#27292A" } }, '"Rewrote my CV and I got 3 interviews in a week."'),
           h("p", { style: { margin: "10px 0 0", fontSize: "13px", lineHeight: "20px", color: "#3B3D40" } }, "“I’d been applying for months with no replies. ResumeCoach restructured my experience and told me exactly what recruiters look for. Two weeks later I signed an offer — fully remote.”"),
