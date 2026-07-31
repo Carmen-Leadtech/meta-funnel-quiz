@@ -34,6 +34,19 @@
 <script src="/qz/common/init.js?v=20260727000000"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ResumeCoach — Your journey to a better CV and a better job</title>
+<style>
+  /* Local Roboto fallback — declared BEFORE the Google Fonts <link> below so
+     it loses the cascade (and stays invisible) whenever that stylesheet
+     loads successfully, but silently takes over if the CDN request is ever
+     blocked or fails, since then no competing @font-face rule exists at all. */
+  @font-face { font-family: 'Roboto'; font-style: normal; font-weight: 400; src: url('Fonts/Roboto-Regular.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Roboto'; font-style: italic; font-weight: 400; src: url('Fonts/Roboto-Italic.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Roboto'; font-style: normal; font-weight: 500; src: url('Fonts/Roboto-SemiBold.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Roboto'; font-style: italic; font-weight: 500; src: url('Fonts/Roboto-SemiBoldItalic.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Roboto'; font-style: normal; font-weight: 700; src: url('Fonts/Roboto-Bold.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Roboto'; font-style: italic; font-weight: 700; src: url('Fonts/Roboto-BoldItalic.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Roboto'; font-style: normal; font-weight: 900; src: url('Fonts/Roboto-Black.ttf') format('truetype'); font-display: swap; }
+</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -93,7 +106,6 @@
     brandVisa: "assets/brand-visa.webp",
     peopleHired: "assets/people-hired.webp",
     atsPassedV2: "assets/ats-passed-v2.webp",
-    jobMatchCardsV2: "assets/job-match-cards-v2.webp",
     linkedinBeforeAfterV2: "assets/linkedin-before-after-v2.webp",
     cvAmsterdam: "assets/cv-amsterdam.webp",
     cvVienna: "assets/cv-vienna.webp",
@@ -106,7 +118,20 @@
     iconInterview: "assets/icon-interview.webp",
     iconJobmatch: "assets/icon-jobmatch.webp",
     people: "assets/people.webp",
-    trustpilotLogo: "assets/Trustpilot.svg.webp"
+    trustpilotLogo: "assets/Trustpilot.svg.webp",
+    aecom: "assets/aecom.webp"
+  };
+
+  // S16 Job Match hero — one image per sector (state.answers.sector, from
+  // QUESTIONS[3]). Keyed by the exact sector label used as the answer value.
+  var SECTOR_JOB_MATCH_IMAGES = {
+    "Retail, Hospitality & Tourism": "assets/Retail, Hospitality & Tourism 1-convertido-de-png.webp",
+    "Healthcare & Medical": "assets/Healthcare & Medical 1-convertido-de-png.webp",
+    "Manufacturing, Logistics & Transport": "assets/Manufacturing, Logistics & Transport 1-convertido-de-png.webp",
+    "Office, Admin & Customer Support": "assets/Office, Admin & Customer Support 1-convertido-de-png.webp",
+    "Construction & Trades": "assets/Construction & Trades 1-convertido-de-png.webp",
+    "Tech, Marketing & Media": "assets/Tech, Marketing & Media 1-convertido-de-png.webp",
+    "Other": "assets/Other 1-convertido-de-png.webp"
   };
 
   // CSS properties where a bare number is legitimately unitless (mirrors the
@@ -456,11 +481,11 @@
     var logoRow = ["Accenture", "Amazon", "Tesla", "DHL", "Google", "Uber", "Visa"].map(function (name, i) {
       var key = ["brandAccenture", "brandAmazon", "brandTesla", "brandDhl", "brandGoogle", "brandUber", "brandVisa"][i];
       return '<img src="' + RESOURCES[key] + '" alt="' + name + '" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;">';
-    }).join("") + '<div style="width:44px;height:44px;border-radius:10px;background:#007DB8;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;letter-spacing:-0.2px;flex:none;">DELL</div>';
+    }).join("") + '<img src="' + RESOURCES.aecom + '" alt="Aecom" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;">';
     var logoRowGhost = ["", "", "", "", "", "", ""].map(function (_, i) {
       var key = ["brandAccenture", "brandAmazon", "brandTesla", "brandDhl", "brandGoogle", "brandUber", "brandVisa"][i];
       return '<img src="' + RESOURCES[key] + '" alt="" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;">';
-    }).join("") + '<div style="width:44px;height:44px;border-radius:10px;background:#007DB8;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;letter-spacing:-0.2px;flex:none;">DELL</div>';
+    }).join("") + '<img src="' + RESOURCES.aecom + '" alt="Aecom" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;">';
     root.innerHTML =
       '<img src="' + RESOURCES.resumecoachLogo + '" alt="ResumeCoach" style="width:120px;height:auto;display:block;">' +
       '<h1 style="margin:6px 0 0;font-size:36px;line-height:44px;font-weight:500;color:#27292A;text-align:center;text-wrap:balance;animation:rc-fade .55s ease .05s both;">Your journey to<br>a better CV and<br>a <span style="background:linear-gradient(90deg,#D21FFF,#0057A3);-webkit-background-clip:text;background-clip:text;color:transparent;">better job</span><br>starts here</h1>' +
@@ -673,11 +698,13 @@
 
   Quiz.prototype.buildJobMatch = function () {
     var self = this;
+    var sector = this.state.answers.sector;
+    var jobMatchImg = SECTOR_JOB_MATCH_IMAGES[sector] || SECTOR_JOB_MATCH_IMAGES["Other"];
     return this.wrap([this.topBar(true), this.progress(16),
       h("div", { style: { flex: 1, overflowY: "auto", padding: "16px 24px 8px" } }, [
         this.eyebrowBlue("JOB MATCH"),
         h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, ["We'll find jobs where you'd have a ", h("span", { style: { background: "linear-gradient(90deg,#D21FFF,#0057A3)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", fontWeight: 700 } }, "90%+ match"), "."]),
-        h("img", { src: RESOURCES.jobMatchCardsV2, alt: "Top job matches for your resume", decoding: "async", style: { margin: "8px auto 6px", width: "100%", maxWidth: "300px", display: "block" } }),
+        h("img", { src: jobMatchImg, alt: "Top job matches for your resume", decoding: "async", style: { margin: "8px auto 6px", width: "100%", maxWidth: "300px", display: "block" } }),
         h("h2", { style: { margin: "18px 0 0", fontSize: "16px", lineHeight: "22px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Stop wasting time on random job applications."),
         h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, "We match your resume and preferences with live openings to deliver high-fit jobs, helping you apply faster and land more interviews.")
       ]),
