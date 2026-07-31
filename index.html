@@ -477,7 +477,7 @@
   Quiz.prototype.buildWelcome = function () {
     var self = this;
     var root = document.createElement("div");
-    root.style.cssText = "position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,87,163,0.10) 0%,rgba(0,109,204,0.10) 55%,rgba(210,31,255,0.10) 100%),#FFFFFF;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;gap:24px;padding:30px 24px 96px;box-sizing:border-box;cursor:pointer;font-family:Roboto,sans-serif;overflow-y:auto;";
+    root.style.cssText = "position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,87,163,0.10) 0%,rgba(0,109,204,0.10) 55%,rgba(210,31,255,0.10) 100%),#FFFFFF;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;gap:30px;padding:30px 24px 96px;box-sizing:border-box;cursor:pointer;font-family:Roboto,sans-serif;overflow-y:auto;";
     var logoRow = ["Accenture", "Amazon", "Tesla", "DHL", "Google", "Uber", "Visa"].map(function (name, i) {
       var key = ["brandAccenture", "brandAmazon", "brandTesla", "brandDhl", "brandGoogle", "brandUber", "brandVisa"][i];
       return '<img src="' + RESOURCES[key] + '" alt="' + name + '" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;">';
@@ -497,7 +497,7 @@
         '<img src="' + RESOURCES.nyt + '" alt="The New York Times" style="width:150px;height:auto;object-fit:contain;margin:8px 0 0 32px;display:block;">' +
       '</div>' +
       '<div style="width:100%;margin-top:18px;">' +
-        '<p style="margin:0 0 14px;text-align:center;font-size:14px;font-weight:700;color:#27292A;">Our users have been hired by</p>' +
+        '<p style="margin:0 0 20px;text-align:center;font-size:14px;font-weight:700;color:#27292A;">Our users have been hired by</p>' +
         '<div style="width:calc(100% + 48px);margin:0 -24px;overflow:hidden;">' +
           '<div style="display:flex;width:max-content;animation:rc-marquee 26s linear infinite;will-change:transform;">' +
             '<div style="display:flex;align-items:center;gap:14px;padding-right:14px;">' + logoRow + '</div>' +
@@ -528,9 +528,9 @@
       var lead = null;
       if (o.e) lead = h("span", { style: { fontSize: "22px", lineHeight: 1, width: "26px", textAlign: "center", flexShrink: 0 } }, o.e);
       var labelEl = o.desc
-        ? h("span", { style: { flex: 1, fontSize: "15px", color: "#27292A" } }, [h("span", { style: { fontWeight: 700 } }, o.l), h("span", { style: { fontWeight: 400 } }, " " + o.desc)])
+        ? h("span", { style: { flex: 1, fontSize: "15px", fontWeight: 500, color: "#27292A" } }, [h("span", { style: { fontWeight: 700 } }, o.l), h("span", { style: { fontWeight: 400 } }, " " + o.desc)])
         : o.bold
-          ? h("span", { style: { flex: 1, fontSize: "15px", fontWeight: 400, color: "#27292A" } }, [h("span", { style: { fontWeight: 700 } }, o.bold), o.l.slice(o.bold.length)])
+          ? h("span", { style: { flex: 1, fontSize: "15px", fontWeight: 500, color: "#27292A" } }, [h("span", { style: { fontWeight: 700 } }, o.bold), o.l.slice(o.bold.length)])
           : h("span", { style: { flex: 1, fontSize: "15px", fontWeight: 500, color: "#27292A" } }, o.l);
       var trail = multi ? self.squareBox(on, "20px") : null;
       var onClick = function () {
@@ -547,7 +547,7 @@
     var children = [this.topBar(c.back), this.progress(n),
       h("div", { style: { flex: 1, overflowY: "auto", padding: "24px 24px 20px" } }, [
         h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, c.title),
-        c.subtitle ? h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, c.subtitle) : null,
+        c.subtitle ? h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#62666A" } }, c.subtitle) : null,
         h("div", { style: { marginTop: "22px", display: "flex", flexDirection: "column", gap: "10px" } }, cards)
       ])];
     var continueBtnEl = null, continueEnabled = false;
@@ -607,7 +607,7 @@
     return this.wrap([this.topBar(true), this.progress(5),
       h("div", { style: { flex: 1, overflowY: "auto", padding: "24px 24px 20px" } }, [
         h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A" } }, "What role are you aiming for?"),
-        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, "We'll tailor the plan to that role."),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#62666A" } }, "We'll tailor the plan to that role."),
         h("div", { style: { marginTop: "22px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" } }, chipEls)
       ])]);
   };
@@ -630,7 +630,7 @@
       this.topBar(false),
       h("div", { style: { height: "12px" } }),
       h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textAlign: "center", textWrap: "balance" } }, "Getting things ready for you."),
-      h("p", { style: { margin: "10px 0 30px", fontSize: "14px", lineHeight: "20px", color: "#27292A", textAlign: "center" } }, "We're tailoring the right structure, keywords and approach for your role."),
+      h("p", { style: { margin: "10px 0 30px", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A", textAlign: "center" } }, "We're tailoring the right structure, keywords and approach for your role."),
       h("div", { style: { position: "relative", width: "140px", height: "140px", alignSelf: "center", marginBottom: "26px" } }, [ringWrap, pctText]),
       labelWrap
     ]);
@@ -646,7 +646,7 @@
         this.eyebrow("TRUSTED BY MILLIONS"),
         counterEl,
         h("p", { style: { margin: "4px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "CVs built with ResumeCoach."),
-        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["We don't just build your resume. ", h("span", { style: { fontWeight: 700 } }, "We craft the one that puts you ahead of other candidates in your role"), ", and pair it with the tools to keep you there: visibility, preparation, and the offers that follow."]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, ["We don't just build your resume. ", h("span", { style: { fontWeight: 700 } }, "We craft the one that puts you ahead of other candidates in your role"), ", and pair it with the tools to keep you there: visibility, preparation, and the offers that follow."]),
         h("div", { style: { marginTop: "14px", alignSelf: "center" } }, showcaseEl)
       ]),
       this.cta("Continue", function () { self.advanceFrom(7); })]);
@@ -675,7 +675,7 @@
       h("div", { style: { flex: 1, overflowY: "auto", padding: "26px 24px 8px" } }, [
         this.eyebrow("You're not alone"),
         this.heroTitle([["With ResumeCoach, you get noticed ", false], ["2x more", "grad"], [".", false]]),
-        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["The frustrations you just shared? We fix them. Applicants using our plan ", h("span", { style: { fontWeight: 700 } }, "get twice the callbacks.")]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, ["The frustrations you just shared? We fix them. Applicants using our plan ", h("span", { style: { fontWeight: 700 } }, "get twice the callbacks.")]),
         h("div", { style: { marginTop: "30px", display: "flex", justifyContent: "center", alignItems: "flex-end", gap: "40px" } }, [
           col(leftBar, "#DEE1E3", "ON YOUR OWN", "1x", false, null),
           col(rightBarDiv, "#006DCC", "RESUMECOACH", "2x", true, rightEmoji)
@@ -691,7 +691,7 @@
         this.eyebrowBlue("ATS CHECKER"),
         h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "We tune your CV to pass every recruiter filter."),
         h("img", { src: RESOURCES.atsPassedV2, alt: "CV passing ATS checks", decoding: "async", style: { display: "block", width: "100%", maxWidth: "196px", height: "auto", margin: "6px auto 2px" } }),
-        h("p", { style: { margin: "14px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["Don't let ATS filters block your CV. We test it against ", h("span", { style: { fontWeight: 700 } }, "real recruiter criteria"), " and ", h("span", { style: { fontWeight: 700 } }, "give you actionable feedback"), " on format, content, and impact."])
+        h("p", { style: { margin: "14px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, ["Don't let ATS filters block your CV. We test it against ", h("span", { style: { fontWeight: 700 } }, "real recruiter criteria"), " and ", h("span", { style: { fontWeight: 700 } }, "give you actionable feedback"), " on format, content, and impact."])
       ]),
       this.cta("Continue", function () { self.advanceFrom(14); })]);
   };
@@ -706,7 +706,7 @@
         h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, ["We'll find jobs where you'd have a ", h("span", { style: { background: "linear-gradient(90deg,#D21FFF,#0057A3)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", fontWeight: 700 } }, "90%+ match"), "."]),
         h("img", { src: jobMatchImg, alt: "Top job matches for your resume", decoding: "async", style: { margin: "8px auto 6px", width: "100%", maxWidth: "300px", display: "block" } }),
         h("h2", { style: { margin: "18px 0 0", fontSize: "16px", lineHeight: "22px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Stop wasting time on random job applications."),
-        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, "We match your resume and preferences with live openings to deliver high-fit jobs, helping you apply faster and land more interviews.")
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, "We match your resume and preferences with live openings to deliver high-fit jobs, helping you apply faster and land more interviews.")
       ]),
       this.cta("Continue", function () { self.advanceFrom(16); })]);
   };
@@ -718,8 +718,8 @@
         this.eyebrowBlue("LINKEDIN ANALYZER"),
         h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, ["Make recruiters find you on ", h("span", { style: { color: "#006DCC", fontWeight: 700 } }, "LinkedIn"), "."]),
         h("img", { src: RESOURCES.linkedinBeforeAfterV2, alt: "LinkedIn profile before and after", decoding: "async", style: { marginTop: "16px", width: "100%", display: "block" } }),
-        h("p", { style: { margin: "20px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["8 out of 10 ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "recruiters check LinkedIn first"), ". If your profile isn't optimized, ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "you don't exist"), " for them."]),
-        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, "We show you exactly what to fix, section by section, with a clear score.")
+        h("p", { style: { margin: "20px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, ["8 out of 10 ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "recruiters check LinkedIn first"), ". If your profile isn't optimized, ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "you don't exist"), " for them."]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, "We show you exactly what to fix, section by section, with a clear score.")
       ]),
       this.cta("Continue", function () { self.advanceFrom(19); })]);
   };
@@ -730,15 +730,15 @@
       h("div", { style: { flex: 1, overflowY: "auto", padding: "14px 24px 8px" } }, [
         this.eyebrowBlue("INTERVIEW PRACTICE"),
         this.heroTitle([["Confidence isn't a trait. It's ", false], ["practice", true], [".", false]]),
-        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, ["The candidates who get offers ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "are the most prepared."), " We put you in front of real questions for your role, give you clear feedback on every answer, and let you train as many rounds as you need."]),
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, ["The candidates who get offers ", h("span", { style: { fontWeight: 700, color: "#27292A" } }, "are the most prepared."), " We put you in front of real questions for your role, give you clear feedback on every answer, and let you train as many rounds as you need."]),
         h("div", { style: { marginTop: "14px", background: "#EBF6FF", borderRadius: "12px", padding: "18px", animation: "rc-fade .35s ease both" } }, [
           h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" } }, [
             this.starRow(5, "20px"),
             h("img", { src: RESOURCES.trustpilotLogo, alt: "Trustpilot", style: { height: "18px", width: "auto", display: "block", marginLeft: "auto" } })
           ]),
           h("p", { style: { margin: 0, fontSize: "18px", lineHeight: "25px", fontWeight: 700, color: "#27292A" } }, '"Rewrote my CV and I got 3 interviews in a week."'),
-          h("p", { style: { margin: "10px 0 0", fontSize: "13px", lineHeight: "20px", color: "#3B3D40" } }, "“I’d been applying for months with no replies. ResumeCoach restructured my experience and told me exactly what recruiters look for. Two weeks later I signed an offer — fully remote.”"),
-          h("p", { style: { margin: "12px 0 0", fontSize: "13px", fontWeight: 500, color: "#27292A" } }, "Ethan P., Data Analyst"),
+          h("p", { style: { margin: "10px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, "“I’d been applying for months with no replies. ResumeCoach restructured my experience and told me exactly what recruiters look for. Two weeks later I signed an offer — fully remote.”"),
+          h("p", { style: { margin: "12px 0 0", fontSize: "14px", fontWeight: 700, color: "#27292A" } }, "Ethan P., Data Analyst"),
           h("div", { style: { marginTop: "14px", paddingTop: "12px", borderTop: "1px solid #C9E3FA", display: "flex", alignItems: "center", gap: "8px" } }, [
             this.starRow(5, "16px"),
             h("span", { style: { fontSize: "12px", color: "#62666A" } }, "Rated Excellent · 3,298 reviews on Trustpilot")
@@ -769,7 +769,7 @@
         ]),
         h("div", { style: { marginTop: "12px", display: "flex", justifyContent: "space-between" } }, lblEls),
         h("div", { style: { marginTop: "44px", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A" } }, ["You're ", subNumber, " ready to stand out to recruiters."]),
-        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#27292A" } }, "Based on your context, style and goals, you're closer than you think. Let's turn potential into offers.")
+        h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#27292A" } }, "Based on your context, style and goals, you're closer than you think. Let's turn potential into offers.")
       ])]);
   };
 
@@ -805,7 +805,7 @@
     };
     var moreEl = h("div", { style: { marginTop: "30px" } }, [
       this.eyebrow("We give you more than a CV"),
-      h("p", { style: { margin: "8px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, "Everything you need, guided step by step."),
+      h("p", { style: { margin: "8px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#62666A" } }, "Everything you need, guided step by step."),
       h("div", { style: { marginTop: "16px", marginLeft: "-24px", marginRight: "-24px", padding: "2px 24px 6px", display: "flex", gap: "12px", overflowX: "auto" } }, feats.map(function (c) {
         return h("div", { style: { flexShrink: 0, width: "150px", display: "flex", flexDirection: "column", gap: "10px", background: "#FFFFFF", border: "1px solid #E7EAEC", borderRadius: "14px", padding: "15px 14px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" } }, [
           fIcon(c),
@@ -850,7 +850,7 @@
       h("div", { style: { flex: 1, overflowY: "auto", padding: "26px 24px 8px" } }, [
         this.eyebrowBlue("WHY RESUMECOACH"),
         h("h2", { style: { margin: "10px 0 0", fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, "Feel the difference."),
-        h("p", { style: { margin: "10px 0 26px", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, "How things shift once you have us on your side."),
+        h("p", { style: { margin: "10px 0 26px", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#62666A" } }, "How things shift once you have us on your side."),
         h("div", { style: { display: "flex", gap: "18px", alignItems: "flex-start" } }, [col("Before", left, false), col("With ResumeCoach", right, true)])
       ]),
       this.cta("Continue", function () { self.advanceFrom(25); })]);
@@ -862,9 +862,9 @@
     var items = steps.map(function (label) {
       var lead = h("div", { style: { width: "20px", height: "20px", borderRadius: "50%", boxSizing: "border-box", background: "#FFFFFF", border: "2px solid #9AA0A5", flexShrink: 0 } });
       var barFill = h("div", { style: { width: "0%", height: "100%", background: "#006DCC", borderRadius: "3px", transition: "width .12s linear" } });
-      var pctText = h("span", { style: { fontSize: "12px", fontWeight: 500, color: "#62666A" } }, "0%");
+      var pctText = h("span", { style: { fontSize: "13px", fontWeight: 600, color: "#62666A" } }, "0%");
       var row = h("div", { style: { opacity: 0.4, transition: "opacity .4s ease" } }, [
-        h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "7px" } }, [lead, h("span", { style: { fontSize: "14px", lineHeight: "20px", fontWeight: 500, color: "#27292A", flex: 1 } }, label), pctText]),
+        h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "7px" } }, [lead, h("span", { style: { fontSize: "15px", lineHeight: "20px", fontWeight: 500, color: "#27292A", flex: 1 } }, label), pctText]),
         h("div", { style: { height: "5px", background: "#D3D7DA", borderRadius: "3px", overflow: "hidden" } }, barFill)
       ]);
       refs.push({ row: row, lead: lead, barFill: barFill, pctText: pctText });
@@ -909,7 +909,7 @@
     return this.wrap([this.topBar(c.back), this.progress(13),
       h("div", { style: { flex: 1, overflowY: "auto", padding: "24px 24px 20px" } }, [
         h("h2", { style: { margin: 0, fontSize: "24px", lineHeight: "32px", fontWeight: 500, color: "#27292A", textWrap: "balance" } }, c.title),
-        c.subtitle ? h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", color: "#62666A" } }, c.subtitle) : null,
+        c.subtitle ? h("p", { style: { margin: "12px 0 0", fontSize: "14px", lineHeight: "20px", fontWeight: 400, color: "#62666A" } }, c.subtitle) : null,
         h("div", { style: { marginTop: "22px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" } }, cardEls)
       ])]);
   };
