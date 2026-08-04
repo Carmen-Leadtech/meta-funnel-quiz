@@ -2,36 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!--
-  ============================================================================
-  PRODUCTION BUILD — Meta Funnel Quiz (27→26 screen flow, S01–S26)
-  ============================================================================
-  This file is self-contained: vanilla HTML/CSS/JS, no React, no external
-  framework, no mobile-device frame, no design-review stepper. Full width /
-  full height on mobile, ready to drop behind any URL once the 3 TODOs below
-  are resolved (task 2 — see QUIZ_FUNNEL_SPEC.md in the project folder):
-
-  TODO #1 — Environment-dependent GTM <noscript> fallback.
-    Confirm this page targets MASTER or STAGE. If MASTER, add immediately
-    after the opening <body> tag (see the commented block right below it):
-      <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5XDR337" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    If STAGE, leave it out entirely (stage has no GTM container).
-
-  TODO #2 — Bump the init.js cache-busting timestamp.
-    The tag below already follows the spec (root-relative, first tag in
-    <head>, no async/defer). Its `?v=` value is a placeholder — set it to
-    the actual yyyyMMddHHmmss at the moment this file is next edited/deployed.
-
-  TODO #3 — Real destination URL for the CTA.
-    Search for FINAL_CTA_HREF near the top of the <script> below and replace
-    the placeholder with the real signup/registration URL (the one that
-    leads into the paywall). Also sanity-check FINAL_CTA_NAME, the
-    `cta_name` slug Amplitude will record.
-
-  Everything else (tracking guard, click_cta wiring, no page-level nav
-  listener on the CTA, custom event naming) is already applied per the spec.
--->
-<script src="/qz/common/init.js?v=20260727000000"></script>
+<!-- STAGE build — 2026-08-04 -->
+<script src="/qz/common/init.js?v=20260804143000"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ResumeCoach — Your journey to a better CV and a better job</title>
 <style>
@@ -66,20 +38,50 @@
 </style>
 </head>
 <body>
-<!-- TODO #1 (master only) — uncomment once environment is confirmed:
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5XDR337" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
--->
 <div id="rc-quiz-root"></div>
 <script>
 (function () {
   "use strict";
 
   // ---------------------------------------------------------------------
-  // Pending values (task 2) — search for these two names when the real
-  // destination is known.
+  // CTA destination — STAGE
   // ---------------------------------------------------------------------
-  var FINAL_CTA_HREF = "#pending-registration-url"; // TODO #3: replace with the real signup URL
-  var FINAL_CTA_NAME = "build_cv_now"; // cta_name slug recorded by Amplitude
+  var FINAL_CTA_HREF = "https://002-stage.resumecoach.com/#/signup?goToApp=/checkout";
+  var FINAL_CTA_NAME = "build_cv_now";
+
+  // ---------------------------------------------------------------------
+  // dataLayer initialisation (GTM)
+  // ---------------------------------------------------------------------
+  window.dataLayer = window.dataLayer || [];
+
+  // Screen metadata for dataLayer events: question_id and question_text per screen.
+  var SCREEN_META = {
+    1:  { id: 's01_welcome',              text: 'Welcome' },
+    2:  { id: 'q01_professional_status',  text: "What's your current professional status?" },
+    3:  { id: 'q02_sector',               text: 'Which sector do you work in — or want to?' },
+    4:  { id: 'q03_experience_level',     text: 'How much experience do you have?' },
+    5:  { id: 'q04_target_role',          text: 'What role are you aiming for?' },
+    6:  { id: 's06_loader_personalizing', text: 'Getting things ready for you.' },
+    7:  { id: 's07_social_proof',         text: 'CVs built with ResumeCoach' },
+    8:  { id: 'q05_main_goal',            text: "What's your main goal?" },
+    9:  { id: 'q06_help_needed',          text: 'What do you want help with most?' },
+    10: { id: 'q07_biggest_frustration',  text: 'What frustrates you most right now?' },
+    11: { id: 's11_noticed',              text: 'With ResumeCoach, you get noticed 2x more.' },
+    12: { id: 'q08_cv_status',            text: 'What does your CV look like today?' },
+    13: { id: 'q09_personal_style',       text: "What's your personal style?" },
+    14: { id: 's14_ats_hero',             text: 'We tune your CV to pass every recruiter filter.' },
+    15: { id: 'q10_work_preference',      text: 'What kind of role are you looking for?' },
+    16: { id: 's16_job_match',            text: "We'll find jobs where you'd have a 90%+ match." },
+    17: { id: 'q11_salary_range',         text: 'What is your expected salary range for your next position?' },
+    18: { id: 'q12_linkedin_status',      text: "How's your LinkedIn profile today?" },
+    19: { id: 's19_linkedin_hero',        text: 'Make recruiters find you on LinkedIn.' },
+    20: { id: 'q13_interview_feeling',    text: 'When you think about your next interview, what do you feel?' },
+    21: { id: 's21_interview_promo',      text: "Confidence isn't a trait. It's practice." },
+    23: { id: 's23_building_loader',      text: 'Putting it all together\u2026' },
+    24: { id: 's24_score',               text: 'Your potential to stand out.' },
+    25: { id: 's25_feel_difference',      text: 'Feel the difference.' },
+    26: { id: 's26_recommended_cv',       text: 'Your ideal CV is ready.' }
+  };
 
   // ---------------------------------------------------------------------
   // Amplitude readiness guard (QUIZ_FUNNEL_SPEC.md §3 / §"async init behavior")
@@ -266,6 +268,9 @@
     if (this.EVENT_NAMES[n]) this.track(this.EVENT_NAMES[n], {});
     if (n === 14) this.track("quiz_midpoint_reached", {});
     if (n === 26) this.track("complete_quiz", {});
+    if (n === 6) this.track("view_loader", {});
+    var _sm = SCREEN_META[n] || { id: 'screen_' + n, text: '' };
+    window.dataLayer.push({ event: 'quiz_step_view', question_id: _sm.id, question_text: _sm.text });
     if (n === 1) this.runWelcomeLoader();
     if (n === 6) this.runPersonalizing();
     if (n === 7) this.runFlash();
@@ -297,6 +302,9 @@
   Quiz.prototype.answer = function (key, value, fromScreen) {
     this.state.answers = Object.assign({}, this.state.answers, (function (o) { o[key] = value; return o; })({}));
     this.track("answer", { name: key, answer: value });
+    if (key === "professional_status") this.track("click_professional_status", { selection: value });
+    var _asm = SCREEN_META[fromScreen] || { id: 'screen_' + fromScreen, text: '' };
+    window.dataLayer.push({ event: 'quiz_answer', question_id: _asm.id, question_text: _asm.text, selected_answer: value });
     this.repaintSelection();
     var self = this;
     this._timers.push(setTimeout(function () { self.advanceFrom(fromScreen); }, 260));
@@ -452,7 +460,7 @@
     return h("div", { style: { padding: "14px 24px 26px", flexShrink: 0 } },
       h("a", {
         href: FINAL_CTA_HREF,
-        "data-amplitude-event": "click_cta",
+        "data-amplitude-event": "click_cta_complete_quiz",
         "data-amplitude-name": FINAL_CTA_NAME,
         className: "rc-cta" + (grad ? " rc-cta--grad" : ""),
         style: { width: "100%", minHeight: "48px", background: grad ? "linear-gradient(90deg,#D21FFF,#0057A3)" : "#006DCC", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", boxSizing: "border-box" }
@@ -553,7 +561,7 @@
     var continueBtnEl = null, continueEnabled = false;
     if (multi) {
       continueEnabled = selArr.length > 0;
-      continueBtnEl = h("div", { onClick: function () { if (continueEnabled) self.advanceFrom(n); }, style: { width: "100%", minHeight: "48px", background: continueEnabled ? "#006DCC" : "#C2E2FF", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: continueEnabled ? "pointer" : "default", transition: "background .15s ease" } },
+      continueBtnEl = h("div", { onClick: function () { if (continueEnabled) { var _sel = Array.isArray(self.state.answers[c.key]) ? self.state.answers[c.key] : []; var _msm = SCREEN_META[n] || { id: 'screen_' + n, text: '' }; window.dataLayer.push({ event: 'quiz_answer', question_id: _msm.id, question_text: _msm.text, selected_answer: _sel.join(', ') }); self.advanceFrom(n); } }, style: { width: "100%", minHeight: "48px", background: continueEnabled ? "#006DCC" : "#C2E2FF", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: continueEnabled ? "pointer" : "default", transition: "background .15s ease" } },
         h("span", { style: { fontSize: "16px", fontWeight: 500, color: "#FFFFFF" } }, "Continue"));
       children.push(h("div", { style: { padding: "14px 24px 26px", flexShrink: 0 } }, continueBtnEl));
     }
