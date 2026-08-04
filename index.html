@@ -264,11 +264,6 @@
     this._refs = {};
     this.state.screen = n;
     this.mount(n === 1 ? this.buildWelcome() : this.buildScreen(n));
-    this.track("view_quiz_step", { step: n });
-    if (this.EVENT_NAMES[n]) this.track(this.EVENT_NAMES[n], {});
-    if (n === 14) this.track("quiz_midpoint_reached", {});
-    if (n === 26) this.track("complete_quiz", {});
-    if (n === 6) this.track("view_loader", {});
     var _sm = SCREEN_META[n] || { id: 'screen_' + n, text: '' };
     window.dataLayer.push({ event: 'quiz_step_view', question_id: _sm.id, question_text: _sm.text });
     if (n === 1) this.runWelcomeLoader();
@@ -301,8 +296,6 @@
 
   Quiz.prototype.answer = function (key, value, fromScreen) {
     this.state.answers = Object.assign({}, this.state.answers, (function (o) { o[key] = value; return o; })({}));
-    this.track("answer", { name: key, answer: value });
-    if (key === "professional_status") this.track("click_professional_status", { selection: value });
     var _asm = SCREEN_META[fromScreen] || { id: 'screen_' + fromScreen, text: '' };
     window.dataLayer.push({ event: 'quiz_answer', question_id: _asm.id, question_text: _asm.text, selected_answer: value });
     this.repaintSelection();
@@ -314,7 +307,6 @@
     var idx = cur.indexOf(value);
     if (idx >= 0) cur.splice(idx, 1); else cur.push(value);
     this.state.answers = Object.assign({}, this.state.answers, (function (o) { o[key] = cur; return o; })({}));
-    this.track("answer_toggle", { name: key, answer: value, selected: idx < 0 });
     this.repaintSelection();
   };
   Quiz.prototype.toggleAll = function (key, allLabels) {
@@ -322,7 +314,6 @@
     var full = cur.length === allLabels.length;
     var next = full ? [] : allLabels.slice();
     this.state.answers = Object.assign({}, this.state.answers, (function (o) { o[key] = next; return o; })({}));
-    this.track("answer_toggle", { name: key, answer: "all_of_the_above", selected: !full });
     this.repaintSelection();
   };
 
@@ -453,15 +444,12 @@
       h("div", { onClick: onClick, className: "rc-btn" + (grad ? " rc-btn--grad" : ""), style: { width: "100%", minHeight: "48px", background: grad ? "linear-gradient(90deg,#D21FFF,#0057A3)" : "#006DCC", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } },
         h("span", { style: { fontSize: "16px", fontWeight: 500, color: "#FFFFFF" } }, label)));
   };
-  // The ONE conversion CTA (S26 "Build this CV now"). Per QUIZ_FUNNEL_SPEC.md
-  // §3.1: real href, native data-amplitude-event="click_cta", and NO click
-  // listener of our own — the plugin's own handler tracks then navigates.
+  // The ONE conversion CTA (S26 "Build this CV now"). Real href, no JS click
+  // listener — browser navigates natively. No Amplitude tracking in the quiz.
   Quiz.prototype.finalCta = function (label, grad) {
     return h("div", { style: { padding: "14px 24px 26px", flexShrink: 0 } },
       h("a", {
         href: FINAL_CTA_HREF,
-        "data-amplitude-event": "click_cta_complete_quiz",
-        "data-amplitude-name": FINAL_CTA_NAME,
         className: "rc-cta" + (grad ? " rc-cta--grad" : ""),
         style: { width: "100%", minHeight: "48px", background: grad ? "linear-gradient(90deg,#D21FFF,#0057A3)" : "#006DCC", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", boxSizing: "border-box" }
       }, h("span", { style: { fontSize: "16px", fontWeight: 500, color: "#FFFFFF" } }, label)));
